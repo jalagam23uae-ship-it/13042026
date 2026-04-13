@@ -1,0 +1,89 @@
+services:
+  db:
+    image: harbor.int.taqniat.ae/cust_superset/postgres@sha256:07ec36ad2d5ab9250f38c8ef749239b662cf15d03c9ddb7167422edbbdf71156
+    container_name: lms_db
+    restart: unless-stopped
+    command: -p 5433
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lms}
+      POSTGRES_USER: ${POSTGRES_USER:-lms_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lms_pass}
+      PGPORT: 5433
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5433"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-lms_user} -d $${POSTGRES_DB:-lms} -p 5433"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lms_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-lms_user}:${POSTGRES_PASSWORD:-lms_pass}@db:5433/${POSTGRES_DB:-lms}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set in .env or the environment}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      # Seed credentials — only read by seed.py, not by the FastAPI app.
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@atp.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_INSTRUCTOR_PASSWORD: ${SEED_INSTRUCTOR_PASSWORD:-}
+      SEED_STUDENT_PASSWORD: ${SEED_STUDENT_PASSWORD:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://192.168.1.179:8000}
+    container_name: lms_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    profiles:
+      - legacy
+
+  # Phase 1-8 migration target. Runs in parallel with the legacy CRA frontend
+  # until the Phase 9 cutover. Enable with: docker compose --profile next up.
+  frontend-next:
+    build:
+      context: ./frontend-next
+      dockerfile: Dockerfile
+    container_name: lms_frontend_next
+    restart: unless-stopped
+    environment:
+      # Inside the docker network the backend is reachable by service name.
+      API_URL_INTERNAL: http://backend:8000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-atp_session}
+      NODE_ENV: production
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    # Healthcheck is defined in frontend-next/Dockerfile using node itself
+    # (the harbor node image has no wget/curl).
+    profiles:
+      - next
+
+volumes:
+  pgdata:
+  uploads:
