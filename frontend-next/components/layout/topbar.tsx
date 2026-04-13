@@ -17,7 +17,7 @@ export function Topbar({ user }: { user: SessionUser }) {
     .join('')
     .toUpperCase();
 
-  const avatarUrl = (user as { avatar_url?: string | null }).avatar_url ?? null;
+  const avatarUrl = user.avatar_url ?? null;
 
   return (
     <header className="flex h-12 items-center justify-between border-b bg-background px-4">

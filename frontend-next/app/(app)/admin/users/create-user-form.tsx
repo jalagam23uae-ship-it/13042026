@@ -36,7 +36,7 @@ export function CreateUserForm() {
           password,
           role,
           is_active: true,
-        } as never,
+        },
       });
       if (error) {
         toast.error('Failed to create user. Email may already be taken.');
