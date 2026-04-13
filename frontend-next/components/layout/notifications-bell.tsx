@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
 import { Bell, Check, CheckCheck, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ export function NotificationsBell() {
 
   async function loadUnreadCount() {
     const client = browserClient();
-    const { data } = await client.GET('/notifications/unread-count' as never, {} as never as never as never);
+    const { data } = await client.GET('/notifications/unread-count', {});
     const count = (data as { count?: number } | undefined)?.count ?? 0;
     setUnread(count);
   }
@@ -39,7 +40,7 @@ export function NotificationsBell() {
   async function loadList() {
     setLoading(true);
     const client = browserClient();
-    const { data } = await client.GET('/notifications/my' as never, {} as never as never as never);
+    const { data } = await client.GET('/notifications/my', {});
     setItems((Array.isArray(data) ? data : []) as Notification[]);
     setLoading(false);
   }
@@ -57,9 +58,9 @@ export function NotificationsBell() {
   function markRead(id: number) {
     startTransition(async () => {
       const client = browserClient();
-      const { error } = await client.PUT('/notifications/{notification_id}/read' as never, {
+      const { error } = await client.PUT('/notifications/{notification_id}/read', {
         params: { path: { notification_id: id } },
-      } as never);
+      });
       if (error) {
         toast.error('Failed to mark as read');
         return;
@@ -72,7 +73,7 @@ export function NotificationsBell() {
   function markAllRead() {
     startTransition(async () => {
       const client = browserClient();
-      const { error } = await client.PUT('/notifications/read-all' as never, {} as never as never as never as never);
+      const { error } = await client.PUT('/notifications/read-all', {});
       if (error) {
         toast.error('Failed to mark all as read');
         return;
@@ -86,9 +87,9 @@ export function NotificationsBell() {
   function deleteOne(id: number) {
     startTransition(async () => {
       const client = browserClient();
-      const { error } = await client.DELETE('/notifications/{notification_id}' as never, {
+      const { error } = await client.DELETE('/notifications/{notification_id}', {
         params: { path: { notification_id: id } },
-      } as never);
+      });
       if (error) {
         toast.error('Failed to delete notification');
         return;
@@ -188,6 +189,15 @@ export function NotificationsBell() {
               ))}
             </ul>
           )}
+        </div>
+        <div className="border-t p-2 text-center">
+          <Link
+            href="/notifications"
+            onClick={() => setOpen(false)}
+            className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+          >
+            View all notifications
+          </Link>
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
