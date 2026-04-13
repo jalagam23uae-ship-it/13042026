@@ -1,0 +1,6 @@
+.next
+node_modules
+public
+package-lock.json
+components/ui
+lib/api/schema.ts
