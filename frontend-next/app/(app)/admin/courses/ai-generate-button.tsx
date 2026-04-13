@@ -12,7 +12,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
@@ -64,13 +63,12 @@ export function AiGenerateButton({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm">
-          <Sparkles className="size-3.5" />
-          AI generate
-        </Button>
-      </DialogTrigger>
+    <>
+      <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
+        <Sparkles className="size-3.5" />
+        AI generate
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>AI course metadata</DialogTitle>
@@ -143,6 +141,7 @@ export function AiGenerateButton({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   );
 }

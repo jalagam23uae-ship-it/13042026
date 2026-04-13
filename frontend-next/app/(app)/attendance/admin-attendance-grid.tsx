@@ -37,7 +37,7 @@ export async function AdminAttendanceGrid() {
   const client = serverClient(token);
 
   const [allRes, dailyRes] = await Promise.all([
-    client.GET('/time-tracking/admin/all' as never, {}),
+    client.GET('/time-tracking/admin/all' as never, {} as never as never as never),
     client.GET('/time-tracking/admin/daily-attendance' as never, {
       params: { query: { days: 7 } },
     } as never),

@@ -21,19 +21,19 @@ import { browserClient } from '@/lib/api/client';
 export function AnnouncementActions({
   id,
   title,
-  message,
+  content,
   pinned,
 }: {
   id: number;
   title: string;
-  message: string;
+  content: string;
   pinned: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState(title);
-  const [editMessage, setEditMessage] = useState(message);
+  const [editContent, setEditContent] = useState(content);
 
   function saveEdit() {
     if (!editTitle.trim()) {
@@ -44,7 +44,7 @@ export function AnnouncementActions({
       const client = browserClient();
       const { error } = await client.PUT('/announcements/{announcement_id}' as never, {
         params: { path: { announcement_id: id } },
-        body: { title: editTitle.trim(), message: editMessage } as never,
+        body: { title: editTitle.trim(), content: editContent } as never,
       } as never);
       if (error) {
         toast.error('Failed to update announcement');
@@ -123,7 +123,7 @@ export function AnnouncementActions({
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit announcement</DialogTitle>
-            <DialogDescription>Update the title or message body.</DialogDescription>
+            <DialogDescription>Update the title or content body.</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
@@ -135,11 +135,11 @@ export function AnnouncementActions({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor={`ann-msg-${id}`}>Message (Markdown supported)</Label>
+              <Label htmlFor={`ann-content-${id}`}>Content (Markdown supported)</Label>
               <Textarea
-                id={`ann-msg-${id}`}
-                value={editMessage}
-                onChange={(e) => setEditMessage(e.target.value)}
+                id={`ann-content-${id}`}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
                 rows={6}
               />
             </div>

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import { CreateUserForm } from './create-user-form';
 import { UserRowActions } from './user-row-actions';
+import { BulkImportDialog } from './bulk-import-dialog';
 
 export default async function AdminUsersPage() {
   await requireAdmin();
@@ -29,20 +30,21 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
-        <p className="text-sm text-muted-foreground">
-          Admin-only view. Enforced at the server in{' '}
-          <code className="font-mono">app/(app)/admin/layout.tsx</code>.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
+          <p className="text-sm text-muted-foreground">
+            Admin-only view. Manage and import users below.
+          </p>
+        </div>
+        <BulkImportDialog />
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Create new user</CardTitle>
           <CardDescription>
-            Users can also be bulk-imported via the <code className="font-mono">/bulk/import-users</code>
-            endpoint (CSV).
+            Single user. For bulk creation, use the &ldquo;Bulk import&rdquo; button above.
           </CardDescription>
         </CardHeader>
         <CardContent>

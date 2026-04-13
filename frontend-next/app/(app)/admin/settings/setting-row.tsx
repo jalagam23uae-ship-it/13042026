@@ -33,9 +33,8 @@ export function SettingRow({
       else if (value === 'false') coerced = false;
       else if (value !== '' && !isNaN(Number(value))) coerced = Number(value);
 
-      const { error } = await client.PUT('/settings/{key}' as never, {
-        params: { path: { key: settingKey } },
-        body: { value: coerced } as never,
+      const { error } = await client.PUT('/settings/' as never, {
+        body: { [settingKey]: coerced } as never,
       } as never);
       if (error) {
         toast.error('Failed to update setting');

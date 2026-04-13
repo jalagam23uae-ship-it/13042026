@@ -14,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
@@ -108,13 +107,12 @@ export function ImportDocxDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : (reset(), setOpen(false)))}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <FileText className="size-3.5" />
-          Import DOCX
-        </Button>
-      </DialogTrigger>
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <FileText className="size-3.5" />
+        Import DOCX
+      </Button>
+      <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : (reset(), setOpen(false)))}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Import course from DOCX</DialogTitle>
@@ -216,6 +214,7 @@ export function ImportDocxDialog() {
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   );
 }

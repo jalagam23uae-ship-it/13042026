@@ -31,7 +31,7 @@ export function NotificationsBell() {
 
   async function loadUnreadCount() {
     const client = browserClient();
-    const { data } = await client.GET('/notifications/unread-count' as never, {});
+    const { data } = await client.GET('/notifications/unread-count' as never, {} as never as never as never);
     const count = (data as { count?: number } | undefined)?.count ?? 0;
     setUnread(count);
   }
@@ -39,7 +39,7 @@ export function NotificationsBell() {
   async function loadList() {
     setLoading(true);
     const client = browserClient();
-    const { data } = await client.GET('/notifications/my' as never, {});
+    const { data } = await client.GET('/notifications/my' as never, {} as never as never as never);
     setItems((Array.isArray(data) ? data : []) as Notification[]);
     setLoading(false);
   }
@@ -72,7 +72,7 @@ export function NotificationsBell() {
   function markAllRead() {
     startTransition(async () => {
       const client = browserClient();
-      const { error } = await client.PUT('/notifications/read-all' as never, {} as never);
+      const { error } = await client.PUT('/notifications/read-all' as never, {} as never as never as never as never);
       if (error) {
         toast.error('Failed to mark all as read');
         return;
@@ -99,7 +99,7 @@ export function NotificationsBell() {
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger>
         <Button variant="ghost" size="sm" className="relative" aria-label="Notifications">
           <Bell className="size-4" />
           {unread > 0 ? (

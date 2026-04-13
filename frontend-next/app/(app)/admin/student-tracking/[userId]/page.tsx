@@ -74,7 +74,7 @@ export default async function StudentDetailPage({
     client.GET('/time-tracking/admin/user/{user_id}' as never, {
       params: { path: { user_id: userId } },
     } as never),
-    client.GET('/enrollments/all' as never, {}),
+    client.GET('/enrollments/all' as never, {} as never),
   ]);
 
   const user = userRes.data as UserDetail | undefined;

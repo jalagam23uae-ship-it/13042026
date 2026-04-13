@@ -16,7 +16,7 @@ export default async function AdminSettingsPage() {
   const token = await getSessionToken();
   const client = serverClient(token);
 
-  const { data, error } = await client.GET('/settings/' as never, {});
+  const { data, error } = await client.GET('/settings/' as never, {} as never as never as never);
   let entries: SettingEntry[] = [];
   if (Array.isArray(data)) {
     entries = data as SettingEntry[];

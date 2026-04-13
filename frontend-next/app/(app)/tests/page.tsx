@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Play } from 'lucide-react';
+import { Pencil, Play } from 'lucide-react';
 import { CreateTestForm } from './create-test-form';
 
 type MineStats = { best: number; passed: boolean; attempts: number };
@@ -127,17 +127,30 @@ export default async function TestsPage() {
                       </TableCell>
                       <TableCell>{mine?.attempts ?? 0}</TableCell>
                       <TableCell className="text-right">
-                        {canTake ? (
-                          <Link
-                            href={`/tests/${test.id}`}
-                            className={cn(buttonVariants({ size: 'sm' }))}
-                          >
-                            <Play />
-                            {mine ? 'Retry' : 'Start'}
-                          </Link>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Empty</span>
-                        )}
+                        <div className="flex items-center justify-end gap-2">
+                          {canCreate ? (
+                            <Link
+                              href={`/tests/${test.id}/edit`}
+                              className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}
+                            >
+                              <Pencil />
+                              Edit
+                            </Link>
+                          ) : null}
+                          {canTake ? (
+                            <Link
+                              href={`/tests/${test.id}`}
+                              className={cn(buttonVariants({ size: 'sm' }))}
+                            >
+                              <Play />
+                              {mine ? 'Retry' : 'Start'}
+                            </Link>
+                          ) : (
+                            !canCreate ? (
+                              <span className="text-xs text-muted-foreground">Empty</span>
+                            ) : null
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

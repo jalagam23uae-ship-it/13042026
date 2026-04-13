@@ -41,11 +41,11 @@ export async function AdminDashboard({ name, email, role }: { name: string; emai
   const client = serverClient(token);
 
   const [usersRes, sessionsRes, resultsRes, coursesRes, approvalsRes] = await Promise.all([
-    client.GET('/users/' as never, {}),
-    client.GET('/sessions/' as never, {}),
-    client.GET('/results/all' as never, {}),
-    client.GET('/enrollments/admin/courses' as never, {}),
-    client.GET('/approvals/pending' as never, {}),
+    client.GET('/users/' as never, {} as never as never as never),
+    client.GET('/sessions/' as never, {} as never as never as never),
+    client.GET('/results/all' as never, {} as never as never as never),
+    client.GET('/enrollments/admin/courses' as never, {} as never as never as never),
+    client.GET('/approvals/pending' as never, {} as never as never as never),
   ]);
 
   const users = (Array.isArray(usersRes.data) ? usersRes.data : []) as UserItem[];

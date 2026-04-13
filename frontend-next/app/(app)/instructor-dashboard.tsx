@@ -58,9 +58,9 @@ export async function InstructorDashboard({
   const client = serverClient(token);
 
   const [sessionsRes, assignmentsRes, coursesRes] = await Promise.all([
-    client.GET('/sessions/' as never, {}),
-    client.GET('/assignments/all' as never, {}),
-    client.GET('/enrollments/admin/courses' as never, {}),
+    client.GET('/sessions/' as never, {} as never as never as never),
+    client.GET('/assignments/all' as never, {} as never as never as never),
+    client.GET('/enrollments/admin/courses' as never, {} as never as never as never),
   ]);
 
   const sessions = (Array.isArray(sessionsRes.data) ? sessionsRes.data : []) as SessionItem[];

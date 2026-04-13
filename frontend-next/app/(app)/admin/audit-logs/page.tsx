@@ -56,7 +56,7 @@ export default async function AdminAuditLogsPage({
         },
       },
     } as never),
-    client.GET('/audit/actions' as never, {}),
+    client.GET('/audit/actions' as never, {} as never as never as never),
   ]);
 
   // Backend may return array OR {items, total}. Handle both.
@@ -193,4 +193,4 @@ export default async function AdminAuditLogsPage({
       </Card>
     </div>
   );
-}
+}

@@ -22,7 +22,7 @@ export default async function AnnouncementsPage() {
   const announcements = (Array.isArray(annResult.data) ? annResult.data : []) as Array<{
     id: number;
     title: string;
-    message: string;
+    content: string;
     created_at?: string | null;
     is_pinned?: boolean | null;
   }>;
@@ -96,14 +96,14 @@ export default async function AnnouncementsPage() {
                     <AnnouncementActions
                       id={announcement.id}
                       title={announcement.title}
-                      message={announcement.message}
+                      content={announcement.content}
                       pinned={Boolean(announcement.is_pinned)}
                     />
                   ) : null}
                 </div>
               </CardHeader>
               <CardContent>
-                <SafeMarkdown text={announcement.message} />
+                <SafeMarkdown text={announcement.content} />
               </CardContent>
             </Card>
           ))}
