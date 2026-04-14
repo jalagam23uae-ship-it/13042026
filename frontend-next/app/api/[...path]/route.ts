@@ -35,21 +35,24 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   });
 
   const token = await getSessionToken();
-  if (token) headers.set('authorization', `Bearer ${token}`);
+  if (!token) {
+    return NextResponse.json({ detail: 'Not authenticated' }, { status: 401 });
+  }
+  headers.set('authorization', `Bearer ${token}`);
 
-  const body =
-    request.method === 'GET' || request.method === 'HEAD'
-      ? undefined
-      : await request.arrayBuffer();
+  const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
 
   const upstream = await fetch(target, {
     method: request.method,
     headers,
-    body,
+    body: hasBody ? request.body : undefined,
     // 'follow': Node.js resolves any FastAPI trailing-slash redirects internally.
     // The browser never sees an internal `http://backend:8000/...` Location header.
     redirect: 'follow',
-  });
+    cache: 'no-store',
+    // Required by undici when streaming a request body.
+    ...(hasBody ? { duplex: 'half' } : {}),
+  } as RequestInit & { duplex?: 'half' });
 
   const responseHeaders = new Headers();
   upstream.headers.forEach((value, key) => {

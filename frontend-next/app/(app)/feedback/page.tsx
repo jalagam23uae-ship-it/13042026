@@ -3,7 +3,7 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, BarChart2, Users } from 'lucide-react';
-import { FeedbackForm } from './feedback-form';
+import { FeedbackForm } from './_components/feedback-form';
 
 type FeedbackItem = {
   id: number;

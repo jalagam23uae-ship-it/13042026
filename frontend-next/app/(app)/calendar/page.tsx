@@ -3,7 +3,7 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { CalendarGrid } from './calendar-grid';
+import { CalendarGrid } from './_components/calendar-grid';
 
 type CalendarEvent = {
   id: string | number;

@@ -3,7 +3,7 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Users } from 'lucide-react';
-import { StudentProgressTable } from './student-progress-table';
+import { StudentProgressTable } from './_components/student-progress-table';
 
 type Enrollment = {
   user_id?: number | null;

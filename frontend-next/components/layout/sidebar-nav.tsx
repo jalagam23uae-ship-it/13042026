@@ -60,6 +60,7 @@ const CORE_NAV: NavItem[] = [
 ];
 
 const ADMIN_NAV: NavItem[] = [
+  { href: '/admin/courses', key: 'manageCourses', icon: BookOpen },
   { href: '/admin/users', key: 'users', icon: Users },
   { href: '/admin/reports', key: 'reports', icon: FileText },
   { href: '/admin/analytics', key: 'analytics', icon: Trophy },

@@ -54,3 +54,16 @@ desktop.ini
 playwright-report/
 test-results/
 coverage/
+
+# ── Markdown (keep only README.md) ─────────────────────
+*.md
+!README.md
+!**/README.md
+
+# ── Claude settings ────────────────────────────────────
+.claude/
+CLAUDE.md
+**/CLAUDE.md
+.claude.json
+.claude/settings.json
+.claude/settings.local.json

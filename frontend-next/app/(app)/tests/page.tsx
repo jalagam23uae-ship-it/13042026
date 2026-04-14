@@ -9,8 +9,8 @@ import {
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Play, CheckCircle2, XCircle, BarChart2, RefreshCw, ClipboardList } from 'lucide-react';
-import { CreateTestDialog } from './create-test-dialog';
-import { ManageTestDialog } from './manage-test-dialog';
+import { CreateTestDialog } from './_components/create-test-dialog';
+import { ManageTestDialog } from './_components/manage-test-dialog';
 
 type MineStats = { best: number; passed: boolean; attempts: number };
 

@@ -2,7 +2,7 @@ import { requireAdmin, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Megaphone } from 'lucide-react';
-import { BroadcastForm } from './broadcast-form';
+import { BroadcastForm } from './_components/broadcast-form';
 
 type UserRow = { id: number; name: string; email: string; role: string };
 

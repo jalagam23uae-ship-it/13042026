@@ -3,9 +3,9 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Route } from 'lucide-react';
-import { EnrollPathButton } from './enroll-path-button';
-import { CreatePathDialog } from './create-path-dialog';
-import { PathRowActions } from '../admin/learning-paths/path-row-actions';
+import { EnrollPathButton } from './_components/enroll-path-button';
+import { CreatePathDialog } from './_components/create-path-dialog';
+import { PathRowActions } from '@/components/admin/learning-paths/path-row-actions';
 
 type LearningPath = {
   id: number;

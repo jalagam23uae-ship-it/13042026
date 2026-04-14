@@ -5,7 +5,7 @@ import { serverClient } from '@/lib/api/client';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
-import { TestRunner, type Question } from './test-runner';
+import { TestRunner, type Question } from './_components/test-runner';
 
 type TestDetail = {
   id: number;

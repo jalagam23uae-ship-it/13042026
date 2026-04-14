@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, BookOpen } from 'lucide-react';
-import { EditCourseForm } from './edit-course-form';
-import { CourseContentManager, type Lesson, type Section } from './course-content-manager';
+import { EditCourseForm } from './_components/edit-course-form';
+import { CourseContentManager } from './_components/course-content-manager';
+import type { Lesson, Section } from '@/types/course';
 
 type CourseDetailResponse = {
   course?: {
@@ -63,7 +64,7 @@ export default async function AdminCourseDetailPage({
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-3">
         <Link
-          href="/admin/courses"
+          href="/courses"
           className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
         >
           <ArrowLeft />

@@ -2,21 +2,28 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { FileUploadInput } from '@/components/common/file-upload-input';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
-import { AiGenerateButton } from './ai-generate-button';
 
-export function CreateCourseForm() {
+export function EditCourseForm({
+  courseId,
+  initial,
+}: {
+  courseId: number;
+  initial: { title: string; description: string; category: string; thumbnail_url: string };
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
+  const [title, setTitle] = useState(initial.title);
+  const [description, setDescription] = useState(initial.description);
+  const [category, setCategory] = useState(initial.category);
+  const [thumbnailUrl, setThumbnailUrl] = useState(initial.thumbnail_url);
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,21 +33,20 @@ export function CreateCourseForm() {
     }
     startTransition(async () => {
       const client = browserClient();
-      const { error } = await client.POST('/enrollments/admin/courses', {
+      const { error } = await client.PUT('/enrollments/admin/courses/{course_id}', {
+        params: { path: { course_id: courseId } },
         body: {
           title: title.trim(),
           description: description.trim() || null,
           category: category.trim() || null,
+          thumbnail_url: thumbnailUrl || null,
         } as never,
       });
       if (error) {
-        toast.error('Failed to create course.');
+        toast.error('Failed to save course.');
         return;
       }
-      toast.success(`Course "${title}" created`);
-      setTitle('');
-      setDescription('');
-      setCategory('');
+      toast.success('Course updated');
       router.refresh();
     });
   }
@@ -49,19 +55,18 @@ export function CreateCourseForm() {
     <form onSubmit={submit} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="course-title">Title *</Label>
+          <Label htmlFor="ec-title">Title *</Label>
           <Input
-            id="course-title"
+            id="ec-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Advanced TypeScript"
             required
           />
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="course-category">Category</Label>
+          <Label htmlFor="ec-cat">Category</Label>
           <Input
-            id="course-category"
+            id="ec-cat"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             placeholder="e.g. Programming"
@@ -70,28 +75,34 @@ export function CreateCourseForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="course-description">Description</Label>
+        <Label htmlFor="ec-desc">Description</Label>
         <Textarea
-          id="course-description"
+          id="ec-desc"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="What will students learn?"
           rows={3}
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? <Loader2 className="animate-spin" /> : <Plus />}
-          Create course
-        </Button>
-        <AiGenerateButton
-          onApply={(meta) => {
-            if (meta.title) setTitle(meta.title);
-            if (meta.description) setDescription(meta.description);
-          }}
+      <div className="flex flex-col gap-2">
+        <Label>Thumbnail image</Label>
+        <FileUploadInput
+          accept="image/*"
+          onUploaded={(result) => setThumbnailUrl(result.url)}
+          current={thumbnailUrl ? { url: thumbnailUrl } : null}
+          label="Upload thumbnail"
         />
+        {thumbnailUrl ? (
+          <p className="font-mono text-[10px] text-muted-foreground truncate">
+            {thumbnailUrl}
+          </p>
+        ) : null}
       </div>
+
+      <Button type="submit" disabled={isPending} size="sm" className="self-start">
+        {isPending ? <Loader2 className="animate-spin" /> : <Save />}
+        Save course details
+      </Button>
     </form>
   );
 }

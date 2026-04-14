@@ -1,7 +1,7 @@
 import { requireUser } from '@/lib/auth/session';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
-import { AiChat } from './ai-chat';
+import { AiChat } from './_components/ai-chat';
 
 export default async function AiAssistantPage() {
   await requireUser();

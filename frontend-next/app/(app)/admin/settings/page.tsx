@@ -2,7 +2,7 @@ import { requireAdmin, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings } from 'lucide-react';
-import { SettingRow } from './setting-row';
+import { SettingRow } from './_components/setting-row';
 
 type SettingEntry = {
   key: string;

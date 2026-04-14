@@ -4,7 +4,7 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, BookOpen, Users } from 'lucide-react';
-import { ReviewForm } from './review-form';
+import { ReviewForm } from './_components/review-form';
 
 type Enrollment = {
   id: number;

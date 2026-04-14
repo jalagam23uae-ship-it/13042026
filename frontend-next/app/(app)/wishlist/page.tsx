@@ -2,7 +2,7 @@ import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart } from 'lucide-react';
-import { WishlistItemActions } from './wishlist-item-actions';
+import { WishlistItemActions } from './_components/wishlist-item-actions';
 
 type WishlistItem = {
   id: number;

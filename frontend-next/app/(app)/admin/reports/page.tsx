@@ -6,7 +6,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { FileText, ClipboardList, BarChart2, CheckCircle2, XCircle, Clock } from 'lucide-react';
-import { ExportReportsButton } from './export-button';
+import { ExportReportsButton } from './_components/export-button';
 
 type LessonDropoff = {
   course: string;

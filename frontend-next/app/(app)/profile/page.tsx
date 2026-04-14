@@ -1,9 +1,9 @@
 import { requireUser } from '@/lib/auth/session';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { EditProfileForm } from './edit-profile-form';
-import { ChangePasswordForm } from './change-password-form';
-import { AvatarUpload } from './avatar-upload';
+import { EditProfileForm } from './_components/edit-profile-form';
+import { ChangePasswordForm } from './_components/change-password-form';
+import { AvatarUpload } from './_components/avatar-upload';
 
 export default async function ProfilePage() {
   const user = await requireUser();

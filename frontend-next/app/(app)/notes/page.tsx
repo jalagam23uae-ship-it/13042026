@@ -4,7 +4,7 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Bookmark, StickyNote } from 'lucide-react';
-import { NoteRowActions } from './note-actions';
+import { NoteRowActions } from './_components/note-actions';
 
 type Note = {
   id: number;

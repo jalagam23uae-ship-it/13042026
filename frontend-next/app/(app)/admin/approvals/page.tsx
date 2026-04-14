@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CheckCircle2 } from 'lucide-react';
-import { ApprovalActions } from './approval-actions';
+import { ApprovalActions } from './_components/approval-actions';
 
 type ApprovalRequest = {
   id: number;

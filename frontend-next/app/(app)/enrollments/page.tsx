@@ -3,10 +3,10 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, GraduationCap, ShieldCheck } from 'lucide-react';
-import { EnrollmentBrowser } from './enrollment-browser';
-import { UnenrollButton } from './unenroll-button';
-import { AdminEnrollmentsTable } from './admin-enrollments-table';
-import { BulkEnrollDialog } from './bulk-enroll-dialog';
+import { EnrollmentBrowser } from './_components/enrollment-browser';
+import { UnenrollButton } from './_components/unenroll-button';
+import { AdminEnrollmentsTable } from './_components/admin-enrollments-table';
+import { BulkEnrollDialog } from './_components/bulk-enroll-dialog';
 
 type AvailableCourse = {
   id: number;

@@ -10,9 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { CreateUserDialog } from './create-user-dialog';
-import { UserRowActions } from './user-row-actions';
-import { BulkImportDialog } from './bulk-import-dialog';
+import { CreateUserDialog } from './_components/create-user-dialog';
+import { UserRowActions } from './_components/user-row-actions';
+import { BulkImportDialog } from './_components/bulk-import-dialog';
 
 export default async function AdminUsersPage() {
   await requireAdmin();

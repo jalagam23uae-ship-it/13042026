@@ -2,7 +2,7 @@ import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell } from 'lucide-react';
-import { NotificationList } from './notification-list';
+import { NotificationList } from './_components/notification-list';
 
 type Notification = {
   id: number;

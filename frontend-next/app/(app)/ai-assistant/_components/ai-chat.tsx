@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { Send, Loader2, Bot, User as UserIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { SafeMarkdown } from '@/components/safe-markdown';
+import { SafeMarkdown } from '@/components/common/safe-markdown';
 import { browserClient } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 

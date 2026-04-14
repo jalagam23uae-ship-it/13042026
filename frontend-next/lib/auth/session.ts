@@ -47,6 +47,14 @@ export async function requireAdmin(): Promise<SessionUser> {
   return user;
 }
 
+/** Redirect to / if the user is not an admin or instructor. */
+export async function requireManager(): Promise<SessionUser> {
+  const user = await requireUser();
+  const role = user.role?.toLowerCase();
+  if (role !== 'admin' && role !== 'instructor') redirect('/');
+  return user;
+}
+
 /**
  * Persist a session: writes the raw JWT into an httpOnly cookie.
  * Called from the login server action after a successful backend call.

@@ -5,7 +5,8 @@ import { serverClient } from '@/lib/api/client';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
-import { CoursePlayer, type Lesson, type Section } from './course-player';
+import { CoursePlayer } from './_components/course-player';
+import type { Lesson, Section } from '@/types/course';
 
 type CourseDetailResponse = {
   course?: { id: number; title: string; description?: string | null };

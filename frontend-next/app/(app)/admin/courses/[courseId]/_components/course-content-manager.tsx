@@ -16,30 +16,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { FileUploadInput } from '@/components/file-upload-input';
+import { FileUploadInput } from '@/components/common/file-upload-input';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
-
-export type Lesson = {
-  id: number;
-  course_id: number;
-  section_id?: number | null;
-  title: string;
-  description?: string | null;
-  video_url?: string | null;
-  content_type?: string | null;
-  duration_min?: number | null;
-  sort_order?: number | null;
-  is_free?: boolean | null;
-  attachment_url?: string | null;
-  attachment_name?: string | null;
-};
-
-export type Section = {
-  id: number;
-  title: string;
-  sort_order: number;
-};
+import type { Lesson, Section } from '@/types/course';
 
 type LessonDraft = {
   title: string;

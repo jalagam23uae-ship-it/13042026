@@ -3,7 +3,7 @@ import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessagesSquare } from 'lucide-react';
-import { LessonDiscussion } from './lesson-discussion';
+import { LessonDiscussion } from './_components/lesson-discussion';
 
 type Enrollment = {
   id: number;

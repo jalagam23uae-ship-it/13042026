@@ -3,7 +3,7 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck, ClipboardCheck, Lock } from 'lucide-react';
-import { CertificateActions } from './certificate-actions';
+import { CertificateActions } from './_components/certificate-actions';
 
 type EligibleCertificate = {
   course_id: number;

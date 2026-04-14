@@ -3,7 +3,7 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Search as SearchIcon } from 'lucide-react';
-import { SearchForm } from './search-form';
+import { SearchForm } from './_components/search-form';
 
 type SearchResult = {
   type: string;

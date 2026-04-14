@@ -11,14 +11,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Calendar, Clock } from 'lucide-react';
-import { CreateSessionDialog } from './create-session-dialog';
+import { CreateSessionDialog } from './_components/create-session-dialog';
 import {
   AttendeesButton,
   CheckInButton,
   CheckOutButton,
   DeleteSessionButton,
   EditSessionButton,
-} from './session-actions';
+} from './_components/session-actions';
 
 type SessionItem = {
   id: number;

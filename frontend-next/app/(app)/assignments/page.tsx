@@ -11,10 +11,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { FileText } from 'lucide-react';
-import { CreateAssignmentDialog } from './create-assignment-dialog';
-import { SubmitAssignmentDialog } from './submit-assignment-dialog';
-import { ManageAssignmentDialog } from './manage-assignment-dialog';
-import { AssignmentRowActions } from '../admin/assignments/assignment-row-actions';
+import { CreateAssignmentDialog } from './_components/create-assignment-dialog';
+import { SubmitAssignmentDialog } from './_components/submit-assignment-dialog';
+import { ManageAssignmentDialog } from './_components/manage-assignment-dialog';
+import { AssignmentRowActions } from '@/components/admin/assignments/assignment-row-actions';
 
 type Assignment = {
   id: number;

@@ -13,9 +13,9 @@ import {
   Trophy,
   ArrowRight,
 } from 'lucide-react';
-import { AdminDashboard } from './admin-dashboard';
-import { InstructorDashboard } from './instructor-dashboard';
-import { MyCourseDialog } from './courses/my-courses-dialog';
+import { AdminDashboard } from '@/components/dashboards/admin-dashboard';
+import { InstructorDashboard } from '@/components/dashboards/instructor-dashboard';
+import { MyCourseDialog } from '@/components/common/my-courses-dialog';
 
 type Enrollment = {
   course_id?: number;

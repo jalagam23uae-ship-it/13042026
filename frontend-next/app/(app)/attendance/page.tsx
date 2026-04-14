@@ -11,8 +11,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CheckSquare, Clock, Flame, Timer } from 'lucide-react';
-import { AttendanceHeatmap } from './attendance-heatmap';
-import { AdminAttendanceGrid } from './admin-attendance-grid';
+import { AttendanceHeatmap } from './_components/attendance-heatmap';
+import { AdminAttendanceGrid } from './_components/admin-attendance-grid';
 
 type AttendanceRow = {
   id: number;

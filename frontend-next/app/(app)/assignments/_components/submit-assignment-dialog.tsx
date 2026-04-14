@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { FileUploadInput } from '@/components/file-upload-input';
+import { FileUploadInput } from '@/components/common/file-upload-input';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
 
