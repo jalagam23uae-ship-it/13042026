@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,14 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function CreateSessionForm({
   courses,
 }: {
   courses: Array<{ id: number; title: string }>;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [instructor, setInstructor] = useState('');
@@ -24,15 +22,9 @@ export function CreateSessionForm({
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!title.trim() || !startTime || !endTime) {
-      toast.error('Title, start, and end are required');
-      return;
-    }
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.POST('/sessions/', {
+  const { mutate: create, isPending } = useApiMutation(
+    () =>
+      browserClient().POST('/sessions/', {
         body: {
           title: title.trim(),
           description: description.trim() || null,
@@ -42,20 +34,28 @@ export function CreateSessionForm({
           end_time: new Date(endTime).toISOString(),
           status: 'scheduled',
         } as never,
-      });
-      if (error) {
-        toast.error('Failed to create session.');
-        return;
-      }
-      toast.success(`Session "${title}" created`);
-      setTitle('');
-      setDescription('');
-      setInstructor('');
-      setCourseId('');
-      setStartTime('');
-      setEndTime('');
-      router.refresh();
-    });
+      }),
+    {
+      errorMessage: 'Failed to create session.',
+      onSuccess: () => {
+        toast.success(`Session "${title}" created`);
+        setTitle('');
+        setDescription('');
+        setInstructor('');
+        setCourseId('');
+        setStartTime('');
+        setEndTime('');
+      },
+    },
+  );
+
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!title.trim() || !startTime || !endTime) {
+      toast.error('Title, start, and end are required');
+      return;
+    }
+    create(undefined);
   }
 
   return (

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,7 +61,7 @@ export default async function ReviewsPage() {
   const token = await getSessionToken();
   const client = serverClient(token);
 
-  const isStaff = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
+  const isStaff = isManager(user);
 
   /* ── Admin / Instructor view ──────────────────────────────── */
   if (isStaff) {

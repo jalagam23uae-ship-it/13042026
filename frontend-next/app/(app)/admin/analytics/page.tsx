@@ -1,5 +1,6 @@
 import { requireAdmin, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
+import { asArray } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -56,8 +57,8 @@ export default async function AdminAnalyticsPage() {
     client.GET('/analytics/quiz-analysis', {}),
   ]);
   const overview = (overviewResult.data ?? {}) as Overview;
-  const completion = (Array.isArray(completionResult.data) ? completionResult.data : []) as CourseCompletion[];
-  const quizzes = (Array.isArray(quizResult.data) ? quizResult.data : []) as QuizAnalysis[];
+  const completion = asArray<CourseCompletion>(completionResult.data);
+  const quizzes = asArray<QuizAnalysis>(quizResult.data);
 
   return (
     <div className="flex flex-col gap-6">

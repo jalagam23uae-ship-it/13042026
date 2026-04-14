@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function EnrollButton({
   courseId,
@@ -15,8 +14,18 @@ export function EnrollButton({
   alreadyEnrolled: boolean;
 }) {
   const [enrolled, setEnrolled] = useState(alreadyEnrolled);
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+
+  const { mutate: enroll, isPending } = useApiMutation(
+    () =>
+      browserClient().POST('/enrollments/', {
+        body: { course_id: courseId } as never,
+      }),
+    {
+      successMessage: 'Enrolled successfully',
+      errorMessage: 'Failed to enroll in this course.',
+      onSuccess: () => setEnrolled(true),
+    },
+  );
 
   if (enrolled) {
     return (
@@ -31,21 +40,7 @@ export function EnrollButton({
       size="sm"
       className="w-full"
       disabled={isPending}
-      onClick={() => {
-        startTransition(async () => {
-          const client = browserClient();
-          const { error } = await client.POST('/enrollments/', {
-            body: { course_id: courseId } as never,
-          });
-          if (error) {
-            toast.error('Failed to enroll in this course.');
-            return;
-          }
-          setEnrolled(true);
-          toast.success('Enrolled successfully');
-          router.refresh();
-        });
-      }}
+      onClick={() => enroll(undefined)}
     >
       {isPending ? <Loader2 className="animate-spin" /> : null}
       Enroll

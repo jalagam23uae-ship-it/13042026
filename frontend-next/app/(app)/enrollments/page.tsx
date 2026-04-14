@@ -1,5 +1,6 @@
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isAdmin as checkIsAdmin, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
+import { asArray } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, GraduationCap, ShieldCheck } from 'lucide-react';
@@ -50,9 +51,8 @@ type WishlistItem = { course_id: number };
 export default async function EnrollmentsPage() {
   const user = await requireUser();
   const isStaff =
-    user.role?.toLowerCase() === 'admin' ||
-    user.role?.toLowerCase() === 'instructor';
-  const isAdmin = user.role?.toLowerCase() === 'admin';
+    isManager(user);
+  const isAdmin = checkIsAdmin(user);
   const token = await getSessionToken();
   const client = serverClient(token);
 
@@ -65,12 +65,8 @@ export default async function EnrollmentsPage() {
       client.GET('/enrollments/courses' as never, {} as never),
     ]);
 
-    const allEnrollments = (
-      Array.isArray(allEnrollmentsResult.data) ? allEnrollmentsResult.data : []
-    ) as AdminEnrollment[];
-    const courses = (
-      Array.isArray(coursesResult.data) ? coursesResult.data : []
-    ) as AvailableCourse[];
+    const allEnrollments = asArray<AdminEnrollment>(allEnrollmentsResult.data);
+    const courses = asArray<AvailableCourse>(coursesResult.data);
 
     return (
       <div className="flex flex-col gap-6">
@@ -122,11 +118,11 @@ export default async function EnrollmentsPage() {
     client.GET('/enrollments/categories' as never, {} as never),
   ]);
 
-  const courses = (Array.isArray(available.data) ? available.data : []) as AvailableCourse[];
-  const myEnrollments = (Array.isArray(mine.data) ? mine.data : []) as MyEnrollment[];
-  const wishlistItems = (Array.isArray(wishlist.data) ? wishlist.data : []) as WishlistItem[];
+  const courses = asArray<AvailableCourse>(available.data);
+  const myEnrollments = asArray<MyEnrollment>(mine.data);
+  const wishlistItems = asArray<WishlistItem>(wishlist.data);
   const wishlistIds = new Set(wishlistItems.map((w) => w.course_id));
-  const categories = (Array.isArray(categoriesResult.data) ? categoriesResult.data : []) as string[];
+  const categories = asArray<string>(categoriesResult.data);
 
   const enrolledCount = myEnrollments.length;
   const completedCount = myEnrollments.filter((e) => e.completed).length;

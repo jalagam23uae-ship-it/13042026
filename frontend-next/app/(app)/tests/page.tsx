@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isAdmin, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { asArray, cn, fmt } from '@/lib/utils';
 import { Play, CheckCircle2, XCircle, BarChart2, RefreshCw, ClipboardList } from 'lucide-react';
 import { CreateTestDialog } from './_components/create-test-dialog';
 import { ManageTestDialog } from './_components/manage-test-dialog';
@@ -29,15 +29,10 @@ type ResultRow = {
   taken_at?: string | null;
 };
 
-function fmt(dt?: string | null) {
-  if (!dt) return '—';
-  return new Date(dt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
 export default async function TestsPage() {
   const user = await requireUser();
-  const canManage = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
-  const canCreate = user.role?.toLowerCase() === 'admin';
+  const canManage = isManager(user);
+  const canCreate = isAdmin(user);
   const token = await getSessionToken();
   const client = serverClient(token);
 
@@ -54,19 +49,17 @@ export default async function TestsPage() {
       : Promise.resolve({ data: [] as unknown }),
   ]);
 
-  const tests = (Array.isArray(testsResult.data) ? testsResult.data : []) as Array<{
+  const tests = asArray<{
     id: number;
     title: string;
     course_id?: number | null;
     pass_mark?: number | null;
     duration_min?: number | null;
     question_count?: number | null;
-  }>;
-  const adminCourses = (
-    Array.isArray(adminCoursesResult.data) ? adminCoursesResult.data : []
-  ) as Array<{ id: number; title: string }>;
-  const myResults = (Array.isArray(myResultsResult.data) ? myResultsResult.data : []) as ResultRow[];
-  const allResults = (Array.isArray(allResultsResult.data) ? allResultsResult.data : []) as ResultRow[];
+  }>(testsResult.data);
+  const adminCourses = asArray<{ id: number; title: string }>(adminCoursesResult.data);
+  const myResults = asArray<ResultRow>(myResultsResult.data);
+  const allResults = asArray<ResultRow>(allResultsResult.data);
   const error = testsResult.error;
 
   // Student best-per-test map

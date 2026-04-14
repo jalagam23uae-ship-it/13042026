@@ -1,35 +1,27 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function CreateTestForm({
   courses,
 }: {
   courses: Array<{ id: number; title: string }>;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState('');
   const [courseId, setCourseId] = useState<string>('');
   const [passMark, setPassMark] = useState('60');
   const [durationMin, setDurationMin] = useState('30');
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!title.trim()) {
-      toast.error('Title is required');
-      return;
-    }
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.POST('/tests/', {
+  const { mutate: create, isPending } = useApiMutation(
+    () =>
+      browserClient().POST('/tests/', {
         body: {
           title: title.trim(),
           course_id: courseId ? Number(courseId) : null,
@@ -37,18 +29,26 @@ export function CreateTestForm({
           duration_min: Number(durationMin) || 30,
           questions: [],
         } as never,
-      });
-      if (error) {
-        toast.error('Failed to create test.');
-        return;
-      }
-      toast.success(`Test "${title}" created — add questions next.`);
-      setTitle('');
-      setCourseId('');
-      setPassMark('60');
-      setDurationMin('30');
-      router.refresh();
-    });
+      }),
+    {
+      errorMessage: 'Failed to create test.',
+      onSuccess: () => {
+        toast.success(`Test "${title}" created — add questions next.`);
+        setTitle('');
+        setCourseId('');
+        setPassMark('60');
+        setDurationMin('30');
+      },
+    },
+  );
+
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!title.trim()) {
+      toast.error('Title is required');
+      return;
+    }
+    create(undefined);
   }
 
   return (

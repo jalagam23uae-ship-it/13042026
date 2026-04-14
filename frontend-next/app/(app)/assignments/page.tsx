@@ -1,5 +1,6 @@
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isManager, isStudent } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
+import { asArray } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -42,8 +43,8 @@ function fmt(dt?: string | null) {
 
 export default async function AssignmentsPage() {
   const user = await requireUser();
-  const canCreate = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
-  const isStudent = user.role?.toLowerCase() === 'student';
+  const canCreate = isManager(user);
+  const isStudentUser = isStudent(user);
   const token = await getSessionToken();
   const client = serverClient(token);
 
@@ -54,11 +55,9 @@ export default async function AssignmentsPage() {
       ? client.GET('/enrollments/admin/courses' as never, {} as never)
       : Promise.resolve({ data: [] as unknown }),
   ]);
-  const assignments = (Array.isArray(allResult.data) ? allResult.data : []) as Assignment[];
-  const submissions = (Array.isArray(mineResult.data) ? mineResult.data : []) as Submission[];
-  const adminCourses = (
-    Array.isArray(adminCoursesResult.data) ? adminCoursesResult.data : []
-  ) as Array<{ id: number; title: string }>;
+  const assignments = asArray<Assignment>(allResult.data);
+  const submissions = asArray<Submission>(mineResult.data);
+  const adminCourses = asArray<{ id: number; title: string }>(adminCoursesResult.data);
   const submissionMap = new Map<number, Submission>();
   submissions.forEach((s) => submissionMap.set(s.assignment_id, s));
 
@@ -94,8 +93,8 @@ export default async function AssignmentsPage() {
                   <TableHead>Course</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead>Max score</TableHead>
-                  {isStudent && <TableHead>Status</TableHead>}
-                  {isStudent && <TableHead>My score</TableHead>}
+                  {isStudentUser && <TableHead>Status</TableHead>}
+                  {isStudentUser && <TableHead>My score</TableHead>}
                   <TableHead className="text-right">
                     {canCreate ? 'Manage' : 'Action'}
                   </TableHead>
@@ -126,14 +125,14 @@ export default async function AssignmentsPage() {
                       <TableCell>{a.max_score ?? '—'}</TableCell>
 
                       {/* Student-only columns */}
-                      {isStudent && (
+                      {isStudentUser && (
                         <TableCell>
                           <Badge variant={sub?.graded ? 'default' : sub ? 'secondary' : 'outline'}>
                             {status}
                           </Badge>
                         </TableCell>
                       )}
-                      {isStudent && (
+                      {isStudentUser && (
                         <TableCell>
                           {sub?.score != null
                             ? `${sub.score}${a.max_score ? ` / ${a.max_score}` : ''}`
@@ -164,13 +163,13 @@ export default async function AssignmentsPage() {
                             </>
                           )}
                           {/* Student: Submit button */}
-                          {isStudent && !sub && (
+                          {isStudentUser && !sub && (
                             <SubmitAssignmentDialog
                               assignmentId={a.id}
                               assignmentTitle={a.title}
                             />
                           )}
-                          {isStudent && sub && (
+                          {isStudentUser && sub && (
                             <span className="text-xs text-muted-foreground">Submitted</span>
                           )}
                         </div>

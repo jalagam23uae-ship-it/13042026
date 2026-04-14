@@ -1,13 +1,13 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRef, useState } from 'react';
 import { Camera, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
 import { uploadFile } from '@/lib/api/uploads';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function AvatarUpload({
   userId,
@@ -18,10 +18,24 @@ export function AvatarUpload({
   initials: string;
   currentUrl?: string | null;
 }) {
-  const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [isPending, startTransition] = useTransition();
   const [preview, setPreview] = useState<string | null>(currentUrl ?? null);
+
+  const { mutate: upload, isPending } = useApiMutation(
+    async (file: File) => {
+      const result = await uploadFile(file, 'file');
+      const res = await browserClient().PUT('/users/{user_id}' as never, {
+        params: { path: { user_id: userId } },
+        body: { avatar_url: result.url } as never,
+      } as never);
+      return { ...res, data: result.url };
+    },
+    {
+      successMessage: 'Avatar updated',
+      errorMessage: 'Failed to save avatar',
+      onSuccess: (url: string) => setPreview(url),
+    },
+  );
 
   function pickFile() {
     fileRef.current?.click();
@@ -38,26 +52,7 @@ export function AvatarUpload({
       toast.error('Image must be smaller than 5MB');
       return;
     }
-
-    startTransition(async () => {
-      try {
-        const result = await uploadFile(file, 'file');
-        const client = browserClient();
-        const { error } = await client.PUT('/users/{user_id}' as never, {
-          params: { path: { user_id: userId } },
-          body: { avatar_url: result.url } as never,
-        } as never);
-        if (error) {
-          toast.error('Failed to save avatar');
-          return;
-        }
-        setPreview(result.url);
-        toast.success('Avatar updated');
-        router.refresh();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Upload failed');
-      }
-    });
+    upload(file);
   }
 
   return (

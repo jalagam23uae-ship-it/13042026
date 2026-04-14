@@ -1,7 +1,8 @@
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SafeMarkdown } from '@/components/common/safe-markdown';
+import { asArray } from '@/lib/utils';
 import { Megaphone, Pin } from 'lucide-react';
 import { CreateAnnouncementDialog } from './_components/create-announcement-dialog';
 import { AnnouncementActions } from './_components/announcement-actions';
@@ -9,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 
 export default async function AnnouncementsPage() {
   const user = await requireUser();
-  const canCreate = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
+  const canCreate = isManager(user);
   const token = await getSessionToken();
   const client = serverClient(token);
 
@@ -19,22 +20,20 @@ export default async function AnnouncementsPage() {
       ? client.GET('/enrollments/admin/courses', {})
       : Promise.resolve({ data: [] as unknown }),
   ]);
-  const announcements = (Array.isArray(annResult.data) ? annResult.data : []) as Array<{
+  const announcements = asArray<{
     id: number;
     title: string;
     content: string;
     created_at?: string | null;
     is_pinned?: boolean | null;
-  }>;
+  }>(annResult.data);
   announcements.sort((a, b) => {
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
     return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
   });
   const error = annResult.error;
-  const adminCourses = (
-    Array.isArray(adminCoursesResult.data) ? adminCoursesResult.data : []
-  ) as Array<{ id: number; title: string }>;
+  const adminCourses = asArray<{ id: number; title: string }>(adminCoursesResult.data);
 
   return (
     <div className="flex flex-col gap-6">

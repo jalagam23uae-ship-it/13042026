@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Loader2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { FileUploadInput } from '@/components/common/file-upload-input';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function SubmitAssignmentDialog({
   assignmentId,
@@ -26,39 +26,39 @@ export function SubmitAssignmentDialog({
   assignmentId: number;
   assignmentTitle: string;
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const [fileUrl, setFileUrl] = useState<string>('');
   const [fileName, setFileName] = useState<string>('');
   const [comments, setComments] = useState('');
 
-  function submit() {
-    if (!fileUrl) {
-      toast.error('Please upload a file first');
-      return;
-    }
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.POST('/assignments/submit', {
+  const { mutate: submit, isPending } = useApiMutation(
+    () =>
+      browserClient().POST('/assignments/submit', {
         body: {
           assignment_id: assignmentId,
           file_url: fileUrl,
           file_name: fileName,
           comments: comments || null,
-        } as never,
-      });
-      if (error) {
-        toast.error('Failed to submit.');
-        return;
-      }
-      toast.success('Assignment submitted');
-      setOpen(false);
-      setFileUrl('');
-      setFileName('');
-      setComments('');
-      router.refresh();
-    });
+        },
+      }),
+    {
+      successMessage: 'Assignment submitted',
+      errorMessage: 'Failed to submit.',
+      onSuccess: () => {
+        setOpen(false);
+        setFileUrl('');
+        setFileName('');
+        setComments('');
+      },
+    },
+  );
+
+  function handleSubmit() {
+    if (!fileUrl) {
+      toast.error('Please upload a file first');
+      return;
+    }
+    submit(undefined);
   }
 
   return (
@@ -103,7 +103,7 @@ export function SubmitAssignmentDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={isPending || !fileUrl}>
+          <Button onClick={handleSubmit} disabled={isPending || !fileUrl}>
             {isPending ? <Loader2 className="animate-spin" /> : null}
             Submit
           </Button>

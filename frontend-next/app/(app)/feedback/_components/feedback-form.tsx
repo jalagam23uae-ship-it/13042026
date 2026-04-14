@@ -1,22 +1,19 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function FeedbackForm({
   sessions,
 }: {
   sessions: Array<{ id: number; title: string }>;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [sessionId, setSessionId] = useState<string>(
     sessions[0] ? String(sessions[0].id) : '',
   );
@@ -26,15 +23,9 @@ export function FeedbackForm({
   const [pace, setPace] = useState('5');
   const [comments, setComments] = useState('');
 
-  if (sessions.length === 0) {
-    return <p className="text-sm text-muted-foreground">No sessions available to rate.</p>;
-  }
-
-  function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.POST('/feedback/', {
+  const { mutate: submitFeedback, isPending } = useApiMutation(
+    () =>
+      browserClient().POST('/feedback/', {
         body: {
           session_id: Number(sessionId),
           overall_rating: Number(overall),
@@ -43,15 +34,21 @@ export function FeedbackForm({
           pace_rating: Number(pace),
           comments: comments || null,
         } as never,
-      });
-      if (error) {
-        toast.error('Failed to submit feedback.');
-        return;
-      }
-      toast.success('Feedback submitted');
-      setComments('');
-      router.refresh();
-    });
+      }),
+    {
+      successMessage: 'Feedback submitted',
+      errorMessage: 'Failed to submit feedback.',
+      onSuccess: () => setComments(''),
+    },
+  );
+
+  if (sessions.length === 0) {
+    return <p className="text-sm text-muted-foreground">No sessions available to rate.</p>;
+  }
+
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    submitFeedback(undefined);
   }
 
   return (

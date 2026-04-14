@@ -1,11 +1,9 @@
 'use client';
 
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function UnenrollButton({
   enrollmentId,
@@ -14,24 +12,21 @@ export function UnenrollButton({
   enrollmentId: number;
   title: string;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const { mutate: drop, isPending } = useApiMutation(
+    () =>
+      browserClient().DELETE('/enrollments/{enrollment_id}', {
+        params: { path: { enrollment_id: enrollmentId } },
+      }),
+    {
+      successMessage: 'Dropped',
+      errorMessage: 'Failed to drop.',
+    },
+  );
 
-  function drop() {
+  function handleClick() {
     if (!window.confirm(`Drop enrollment in "${title}"? Your progress will be kept.`))
       return;
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.DELETE('/enrollments/{enrollment_id}', {
-        params: { path: { enrollment_id: enrollmentId } },
-      });
-      if (error) {
-        toast.error('Failed to drop.');
-        return;
-      }
-      toast.success('Dropped');
-      router.refresh();
-    });
+    drop(undefined);
   }
 
   return (
@@ -39,7 +34,7 @@ export function UnenrollButton({
       type="button"
       variant="ghost"
       size="sm"
-      onClick={drop}
+      onClick={handleClick}
       disabled={isPending}
       className="h-6 px-2 text-[10px]"
     >

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { asArray, cn } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import { CoursePlayer } from './_components/course-player';
 import type { Lesson, Section } from '@/types/course';
@@ -40,11 +40,11 @@ export default async function CourseDetailPage({
   const lessons: Lesson[] = Array.isArray(detail.lessons) ? detail.lessons : [];
   const sections: Section[] = Array.isArray(detail.sections) ? detail.sections : [];
 
-  const enrollments = (Array.isArray(enrollmentsResult.data) ? enrollmentsResult.data : []) as Array<{
+  const enrollments = asArray<{
     course_id?: number;
     course_title?: string | null;
     progress_pct?: number | null;
-  }>;
+  }>(enrollmentsResult.data);
   const myEnrollment = enrollments.find((e) => e.course_id === id);
 
   return (

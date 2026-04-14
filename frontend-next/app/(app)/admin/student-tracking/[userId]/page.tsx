@@ -5,7 +5,7 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { asArray, cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -80,9 +80,7 @@ export default async function StudentDetailPage({
 
   const user = userRes.data as UserDetail | undefined;
   const time = (timeRes.data ?? {}) as TimeDetail;
-  const allEnrollments = (Array.isArray(enrollRes.data) ? enrollRes.data : []) as Array<
-    EnrollmentRow & { user_id?: number }
-  >;
+  const allEnrollments = asArray<EnrollmentRow & { user_id?: number }>(enrollRes.data);
   const enrollments = allEnrollments.filter((e) => e.user_id === userId);
 
   if (!user) notFound();

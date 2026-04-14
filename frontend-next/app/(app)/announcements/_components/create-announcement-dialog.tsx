@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Loader2, Megaphone, Pin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,49 +17,52 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function CreateAnnouncementDialog({
   courses,
 }: {
   courses: Array<{ id: number; title: string }>;
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [courseId, setCourseId] = useState<string>('');
   const [isPinned, setIsPinned] = useState(false);
 
   function reset() {
-    setTitle(''); setContent(''); setCourseId(''); setIsPinned(false);
+    setTitle('');
+    setContent('');
+    setCourseId('');
+    setIsPinned(false);
   }
 
-  function submit() {
-    if (!title.trim() || !content.trim()) {
-      toast.error('Title and content are required');
-      return;
-    }
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.POST('/announcements/', {
+  const { mutate: post, isPending } = useApiMutation(
+    () =>
+      browserClient().POST('/announcements/', {
         body: {
           title: title.trim(),
           content: content.trim(),
           course_id: courseId ? Number(courseId) : null,
           is_pinned: isPinned,
         } as never,
-      });
-      if (error) {
-        toast.error('Failed to post announcement.');
-        return;
-      }
-      toast.success('Announcement posted');
-      reset();
-      setOpen(false);
-      router.refresh();
-    });
+      }),
+    {
+      successMessage: 'Announcement posted',
+      errorMessage: 'Failed to post announcement.',
+      onSuccess: () => {
+        reset();
+        setOpen(false);
+      },
+    },
+  );
+
+  function submit() {
+    if (!title.trim() || !content.trim()) {
+      toast.error('Title and content are required');
+      return;
+    }
+    post(undefined);
   }
 
   return (

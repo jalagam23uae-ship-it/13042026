@@ -1,11 +1,10 @@
 'use client';
 
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { Download, Loader2, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 type Props = {
   courseId: number;
@@ -15,25 +14,22 @@ type Props = {
 };
 
 export function CertificateActions({ courseId, issued, eligible, certificateId }: Props) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
-  function claim() {
-    startTransition(async () => {
-      const client = browserClient();
-      const { data, error } = await (client as ReturnType<typeof browserClient>).GET(
+  const { mutate: claim, isPending } = useApiMutation<
+    void,
+    { certificate_id?: string; course_title?: string }
+  >(
+    () =>
+      (browserClient() as ReturnType<typeof browserClient>).GET(
         `/certificates/generate/${courseId}` as never,
         {} as never,
-      );
-      if (error) {
-        toast.error('Failed to generate certificate. Make sure you have passed a test.');
-        return;
-      }
-      const cert = data as { certificate_id?: string; course_title?: string } | undefined;
-      toast.success(`Certificate issued: ${cert?.certificate_id ?? ''}`);
-      router.refresh();
-    });
-  }
+      ) as never,
+    {
+      errorMessage: 'Failed to generate certificate. Make sure you have passed a test.',
+      onSuccess: (cert) => {
+        toast.success(`Certificate issued: ${cert?.certificate_id ?? ''}`);
+      },
+    },
+  );
 
   function download() {
     // Open a printable certificate view
@@ -66,7 +62,12 @@ export function CertificateActions({ courseId, issued, eligible, certificateId }
 
   if (eligible) {
     return (
-      <Button size="sm" onClick={claim} disabled={isPending} className="w-full gap-1.5">
+      <Button
+        size="sm"
+        onClick={() => claim(undefined)}
+        disabled={isPending}
+        className="w-full gap-1.5"
+      >
         {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Award className="size-3.5" />}
         Claim certificate
       </Button>

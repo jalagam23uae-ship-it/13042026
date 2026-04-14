@@ -1,4 +1,4 @@
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,8 +23,7 @@ export default async function ProgressPage() {
   const client = serverClient(token);
 
   const isStaff =
-    user.role?.toLowerCase() === 'admin' ||
-    user.role?.toLowerCase() === 'instructor';
+    isManager(user);
 
   /* ── Admin / Instructor: all students ─────────────────────── */
   if (isStaff) {

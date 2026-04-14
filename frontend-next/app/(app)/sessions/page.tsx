@@ -1,5 +1,6 @@
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
+import { asArray } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -46,7 +47,7 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'dest
 
 export default async function SessionsPage() {
   const user = await requireUser();
-  const canCreate = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
+  const canCreate = isManager(user);
   const token = await getSessionToken();
   const client = serverClient(token);
 
@@ -56,11 +57,9 @@ export default async function SessionsPage() {
       ? client.GET('/enrollments/admin/courses', {})
       : Promise.resolve({ data: [] as unknown }),
   ]);
-  const sessions = (Array.isArray(sessionsResult.data) ? sessionsResult.data : []) as SessionItem[];
+  const sessions = asArray<SessionItem>(sessionsResult.data);
   const error = sessionsResult.error;
-  const adminCourses = (
-    Array.isArray(adminCoursesResult.data) ? adminCoursesResult.data : []
-  ) as Array<{ id: number; title: string }>;
+  const adminCourses = asArray<{ id: number; title: string }>(adminCoursesResult.data);
 
   return (
     <div className="flex flex-col gap-6">

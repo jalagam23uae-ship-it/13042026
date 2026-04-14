@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,8 +18,7 @@ type Enrollment = {
 
 export default async function CoursesPage() {
   const user = await requireUser();
-  const role = user.role?.toLowerCase();
-  const canManage = role === 'admin' || role === 'instructor';
+  const canManage = isManager(user);
   const token = await getSessionToken();
   const client = serverClient(token);
 

@@ -1,18 +1,35 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Loader2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function ChangePasswordForm() {
-  const [isPending, startTransition] = useTransition();
   const [oldPw, setOldPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [confirm, setConfirm] = useState('');
+
+  const { mutate: changePassword, isPending } = useApiMutation(
+    () =>
+      browserClient().POST('/auth/change-password', {
+        body: { old_password: oldPw, new_password: newPw } as never,
+      }),
+    {
+      successMessage: 'Password changed',
+      errorMessage: 'Failed to change password. Is the current password correct?',
+      onSuccess: () => {
+        setOldPw('');
+        setNewPw('');
+        setConfirm('');
+      },
+      refresh: false,
+    },
+  );
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,20 +41,7 @@ export function ChangePasswordForm() {
       toast.error('Passwords do not match');
       return;
     }
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.POST('/auth/change-password', {
-        body: { old_password: oldPw, new_password: newPw } as never,
-      });
-      if (error) {
-        toast.error('Failed to change password. Is the current password correct?');
-        return;
-      }
-      toast.success('Password changed');
-      setOldPw('');
-      setNewPw('');
-      setConfirm('');
-    });
+    changePassword(undefined);
   }
 
   return (

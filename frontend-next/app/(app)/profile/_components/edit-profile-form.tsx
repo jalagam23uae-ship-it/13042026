@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function EditProfileForm({
   userId,
@@ -16,10 +16,20 @@ export function EditProfileForm({
   userId: number;
   initial: { name: string; email: string };
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [name, setName] = useState(initial.name);
   const [email, setEmail] = useState(initial.email);
+
+  const { mutate: save, isPending } = useApiMutation(
+    () =>
+      browserClient().PUT('/users/{user_id}', {
+        params: { path: { user_id: userId } },
+        body: { name: name.trim(), email: email.trim().toLowerCase() } as never,
+      }),
+    {
+      successMessage: 'Profile updated',
+      errorMessage: 'Failed to update profile.',
+    },
+  );
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,19 +37,7 @@ export function EditProfileForm({
       toast.error('Name and email are required');
       return;
     }
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.PUT('/users/{user_id}', {
-        params: { path: { user_id: userId } },
-        body: { name: name.trim(), email: email.trim().toLowerCase() } as never,
-      });
-      if (error) {
-        toast.error('Failed to update profile.');
-        return;
-      }
-      toast.success('Profile updated');
-      router.refresh();
-    });
+    save(undefined);
   }
 
   return (

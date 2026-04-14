@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Loader2, Send } from 'lucide-react';
 import { browserClient } from '@/lib/api/client';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 type UserRow = { id: number; name: string; email: string; role: string };
 
 type Target = 'all' | 'students' | 'instructors' | 'custom';
 
 export function BroadcastForm({ users }: { users: UserRow[] }) {
-  const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [type, setType] = useState('info');
@@ -46,18 +46,8 @@ export function BroadcastForm({ users }: { users: UserRow[] }) {
     return users.filter((u) => selected.has(u.id));
   }
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) {
-      toast.error('Title is required.');
-      return;
-    }
-    const recipients = resolveRecipients();
-    if (recipients.length === 0) {
-      toast.error('No recipients selected.');
-      return;
-    }
-    startTransition(async () => {
+  const { mutate: broadcast, isPending: pending } = useApiMutation(
+    async (recipients: UserRow[]) => {
       const client = browserClient();
       let ok = 0;
       let fail = 0;
@@ -75,17 +65,38 @@ export function BroadcastForm({ users }: { users: UserRow[] }) {
         else ok++;
       }
       if (ok === 0) {
-        toast.error('Failed to send.');
-      } else if (fail > 0) {
-        toast.success(`Sent to ${ok}, ${fail} failed`);
-      } else {
-        toast.success(`Sent to ${ok} recipient${ok === 1 ? '' : 's'}`);
+        return { error: { detail: 'Failed to send.' } };
+      }
+      return { data: { ok, fail } };
+    },
+    {
+      onSuccess: (result) => {
+        if (result.fail > 0) {
+          toast.success(`Sent to ${result.ok}, ${result.fail} failed`);
+        } else {
+          toast.success(`Sent to ${result.ok} recipient${result.ok === 1 ? '' : 's'}`);
+        }
         setTitle('');
         setMessage('');
         setLink('');
         setSelected(new Set());
-      }
-    });
+      },
+      refresh: false,
+    },
+  );
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim()) {
+      toast.error('Title is required.');
+      return;
+    }
+    const recipients = resolveRecipients();
+    if (recipients.length === 0) {
+      toast.error('No recipients selected.');
+      return;
+    }
+    broadcast(recipients);
   }
 
   return (

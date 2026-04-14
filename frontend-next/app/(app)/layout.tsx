@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import { GraduationCap } from 'lucide-react';
-import { requireUser } from '@/lib/auth/session';
+import { requireUser, isAdmin as checkIsAdmin } from '@/lib/auth/session';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Topbar } from '@/components/layout/topbar';
 import { MobileSidebarProvider } from '@/components/layout/mobile-sidebar';
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await requireUser();
-  const isAdmin = user.role?.toLowerCase() === 'admin';
+  const isAdmin = checkIsAdmin(user);
 
   return (
     <MobileSidebarProvider isAdmin={isAdmin}>

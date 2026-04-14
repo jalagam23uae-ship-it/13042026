@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
@@ -33,7 +33,7 @@ export default async function EditTestPage({
   params: Promise<{ testId: string }>;
 }) {
   const user = await requireUser();
-  if (user.role?.toLowerCase() !== 'admin' && user.role?.toLowerCase() !== 'instructor') {
+  if (!isManager(user)) {
     redirect('/tests');
   }
   const { testId } = await params;

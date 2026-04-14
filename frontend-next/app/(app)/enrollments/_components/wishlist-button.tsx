@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Heart, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function WishlistButton({
   courseId,
@@ -16,41 +16,45 @@ export function WishlistButton({
   onToggle?: (wished: boolean) => void;
 }) {
   const [wished, setWished] = useState(initiallyWished);
-  const [isPending, startTransition] = useTransition();
 
-  function toggle() {
-    startTransition(async () => {
-      const client = browserClient();
-      if (wished) {
-        const { error } = await client.DELETE('/wishlist/{course_id}', {
-          params: { path: { course_id: courseId } },
-        });
-        if (error) {
-          toast.error('Failed to remove from wishlist.');
-          return;
-        }
-        setWished(false);
-        onToggle?.(false);
-      } else {
-        const { error } = await client.POST('/wishlist/{course_id}', {
-          params: { path: { course_id: courseId } },
-        });
-        if (error) {
-          toast.error('Failed to add to wishlist.');
-          return;
-        }
+  const { mutate: add, isPending: isAdding } = useApiMutation(
+    () =>
+      browserClient().POST('/wishlist/{course_id}', {
+        params: { path: { course_id: courseId } },
+      }),
+    {
+      errorMessage: 'Failed to add to wishlist.',
+      onSuccess: () => {
         setWished(true);
         onToggle?.(true);
-      }
-    });
-  }
+      },
+      refresh: false,
+    },
+  );
+
+  const { mutate: remove, isPending: isRemoving } = useApiMutation(
+    () =>
+      browserClient().DELETE('/wishlist/{course_id}', {
+        params: { path: { course_id: courseId } },
+      }),
+    {
+      errorMessage: 'Failed to remove from wishlist.',
+      onSuccess: () => {
+        setWished(false);
+        onToggle?.(false);
+      },
+      refresh: false,
+    },
+  );
+
+  const isPending = isAdding || isRemoving;
 
   return (
     <Button
       type="button"
       size="icon"
       variant="ghost"
-      onClick={toggle}
+      onClick={() => (wished ? remove(undefined) : add(undefined))}
       disabled={isPending}
       className="size-6"
       aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}

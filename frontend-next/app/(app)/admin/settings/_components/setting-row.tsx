@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Check, Loader2, Pencil, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 type SettingValue = string | number | boolean | null | undefined;
 
@@ -19,32 +18,26 @@ export function SettingRow({
   initialValue: SettingValue;
   description?: string | null;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(renderRaw(initialValue));
 
-  function save() {
-    startTransition(async () => {
-      const client = browserClient();
+  const { mutate: save, isPending } = useApiMutation(
+    () => {
       // Try to coerce booleans / numbers; fall back to string.
       let coerced: SettingValue = value;
       if (value === 'true') coerced = true;
       else if (value === 'false') coerced = false;
       else if (value !== '' && !isNaN(Number(value))) coerced = Number(value);
-
-      const { error } = await client.PUT('/settings/' as never, {
+      return browserClient().PUT('/settings/' as never, {
         body: { [settingKey]: coerced } as never,
       } as never);
-      if (error) {
-        toast.error('Failed to update setting');
-        return;
-      }
-      toast.success(`Saved ${settingKey}`);
-      setEditing(false);
-      router.refresh();
-    });
-  }
+    },
+    {
+      successMessage: `Saved ${settingKey}`,
+      errorMessage: 'Failed to update setting',
+      onSuccess: () => setEditing(false),
+    },
+  );
 
   function cancel() {
     setValue(renderRaw(initialValue));
@@ -60,7 +53,7 @@ export function SettingRow({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') save();
+              if (e.key === 'Enter') save(undefined);
               if (e.key === 'Escape') cancel();
             }}
             className="h-7 w-full"
@@ -74,7 +67,7 @@ export function SettingRow({
       <td className="p-2 text-right">
         {editing ? (
           <div className="flex items-center justify-end gap-1">
-            <Button size="sm" variant="ghost" onClick={save} disabled={isPending}>
+            <Button size="sm" variant="ghost" onClick={() => save(undefined)} disabled={isPending}>
               {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5 text-green-600" />}
             </Button>
             <Button size="sm" variant="ghost" onClick={cancel} disabled={isPending}>

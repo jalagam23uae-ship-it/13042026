@@ -33,7 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, fmt } from '@/lib/utils';
 import { browserClient } from '@/lib/api/client';
 
 type Assignment = {
@@ -57,11 +57,6 @@ type Submission = {
   feedback?: string | null;
   graded?: boolean | null;
 };
-
-function fmt(dt?: string | null) {
-  if (!dt) return '—';
-  return new Date(dt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 /* ── Inline grade row ────────────────────────────────────────────── */
 function GradeRow({

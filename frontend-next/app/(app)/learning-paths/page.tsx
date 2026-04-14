@@ -1,5 +1,6 @@
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isAdmin as checkIsAdmin, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
+import { asArray } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Route } from 'lucide-react';
@@ -19,8 +20,8 @@ type LearningPath = {
 
 export default async function LearningPathsPage() {
   const user = await requireUser();
-  const isAdmin = user.role?.toLowerCase() === 'admin';
-  const canManage = isAdmin || user.role?.toLowerCase() === 'instructor';
+  const isAdmin = checkIsAdmin(user);
+  const canManage = isManager(user);
   const token = await getSessionToken();
   const client = serverClient(token);
 
@@ -28,10 +29,10 @@ export default async function LearningPathsPage() {
     client.GET('/learning-paths/', {}),
     canManage ? client.GET('/enrollments/admin/courses', {}) : Promise.resolve({ data: [] }),
   ]);
-  const paths = (Array.isArray(pathsResult.data) ? pathsResult.data : []) as LearningPath[];
-  const adminCourses = (Array.isArray(coursesResult.data) ? coursesResult.data : []) as Array<{
+  const paths = asArray<LearningPath>(pathsResult.data);
+  const adminCourses = asArray<{
     id: number; title: string; category?: string | null;
-  }>;
+  }>(coursesResult.data);
   const error = pathsResult.error;
 
   return (

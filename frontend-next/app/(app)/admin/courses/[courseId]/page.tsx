@@ -4,7 +4,7 @@ import { requireAdmin, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { asArray, cn } from '@/lib/utils';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { EditCourseForm } from './_components/edit-course-form';
 import { CourseContentManager } from './_components/course-content-manager';
@@ -46,15 +46,13 @@ export default async function AdminCourseDetailPage({
   if (!course) notFound();
 
   // Course metadata from admin list (has category, description, is_active)
-  const adminCourses = (
-    Array.isArray(adminCoursesResult.data) ? adminCoursesResult.data : []
-  ) as Array<{
+  const adminCourses = asArray<{
     id: number;
     title: string;
     description?: string | null;
     category?: string | null;
     thumbnail_url?: string | null;
-  }>;
+  }>(adminCoursesResult.data);
   const adminRow = adminCourses.find((c) => c.id === id) ?? course;
 
   const lessons: Lesson[] = Array.isArray(detail.lessons) ? detail.lessons : [];

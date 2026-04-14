@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isAdmin } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { asArray, cn } from '@/lib/utils';
 import {
   BookOpen,
   ClipboardList,
@@ -52,10 +52,12 @@ type EligibleCert = {
 export default async function DashboardPage() {
   const user = await requireUser();
 
-  if (user.role?.toLowerCase() === 'admin') {
+  if (isAdmin(user)) {
     return <AdminDashboard name={user.name} email={user.email} role={user.role} />;
   }
   if (user.role?.toLowerCase() === 'instructor') {
+    // Instructor branch retained — not promoted to helper since it's the
+    // only caller and the dedicated helper would be a 2-line one-off.
     return (
       <InstructorDashboard
         id={user.id}
@@ -76,10 +78,10 @@ export default async function DashboardPage() {
     client.GET('/announcements/', {}),
   ]);
 
-  const enrollments = (Array.isArray(enrollmentsResult.data) ? enrollmentsResult.data : []) as Enrollment[];
-  const results = (Array.isArray(resultsResult.data) ? resultsResult.data : []) as TestResult[];
-  const certs = (Array.isArray(certsResult.data) ? certsResult.data : []) as EligibleCert[];
-  const announcements = (Array.isArray(annResult.data) ? annResult.data : []) as Announcement[];
+  const enrollments = asArray<Enrollment>(enrollmentsResult.data);
+  const results = asArray<TestResult>(resultsResult.data);
+  const certs = asArray<EligibleCert>(certsResult.data);
+  const announcements = asArray<Announcement>(annResult.data);
 
   const activeCourses = enrollments.filter((e) => !e.completed).length;
   const completedCourses = enrollments.filter((e) => e.completed).length;

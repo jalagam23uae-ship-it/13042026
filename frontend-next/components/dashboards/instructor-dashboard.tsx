@@ -14,7 +14,7 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { asArray, cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -63,9 +63,9 @@ export async function InstructorDashboard({
     client.GET('/enrollments/admin/courses' as never, {} as never as never as never),
   ]);
 
-  const sessions = (Array.isArray(sessionsRes.data) ? sessionsRes.data : []) as SessionItem[];
-  const assignments = (Array.isArray(assignmentsRes.data) ? assignmentsRes.data : []) as AssignmentItem[];
-  const courses = (Array.isArray(coursesRes.data) ? coursesRes.data : []) as CourseItem[];
+  const sessions = asArray<SessionItem>(sessionsRes.data);
+  const assignments = asArray<AssignmentItem>(assignmentsRes.data);
+  const courses = asArray<CourseItem>(coursesRes.data);
 
   const mySessions = sessions.filter((s) => s.instructor_id === id);
   const now = Date.now();

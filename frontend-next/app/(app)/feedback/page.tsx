@@ -1,5 +1,6 @@
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
+import { asArray } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, BarChart2, Users } from 'lucide-react';
@@ -44,7 +45,7 @@ export default async function FeedbackPage() {
   const token = await getSessionToken();
   const client = serverClient(token);
 
-  const isStaff = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
+  const isStaff = isManager(user);
 
   /* ── Admin / Instructor view ──────────────────────────────── */
   if (isStaff) {
@@ -177,10 +178,10 @@ export default async function FeedbackPage() {
     client.GET('/feedback/my' as never, {} as never),
     client.GET('/sessions/' as never, {} as never),
   ]);
-  const mine = (Array.isArray(myResult.data) ? myResult.data : []) as FeedbackItem[];
-  const sessions = (Array.isArray(sessionsResult.data) ? sessionsResult.data : []) as Array<{
+  const mine = asArray<FeedbackItem>(myResult.data);
+  const sessions = asArray<{
     id: number; title: string;
-  }>;
+  }>(sessionsResult.data);
 
   return (
     <div className="flex flex-col gap-6">

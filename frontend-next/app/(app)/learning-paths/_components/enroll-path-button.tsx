@@ -1,11 +1,9 @@
 'use client';
 
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { Loader2, Plus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function EnrollPathButton({
   pathId,
@@ -14,23 +12,16 @@ export function EnrollPathButton({
   pathId: number;
   enrolled: boolean;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
-  function enroll() {
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.POST('/learning-paths/enroll/{path_id}' as never, {
+  const { mutate: enroll, isPending } = useApiMutation(
+    () =>
+      browserClient().POST('/learning-paths/enroll/{path_id}' as never, {
         params: { path: { path_id: pathId } },
-      } as never);
-      if (error) {
-        toast.error('Failed to enroll in learning path');
-        return;
-      }
-      toast.success('Enrolled in learning path — all courses added');
-      router.refresh();
-    });
-  }
+      } as never),
+    {
+      successMessage: 'Enrolled in learning path — all courses added',
+      errorMessage: 'Failed to enroll in learning path',
+    },
+  );
 
   if (enrolled) {
     return (
@@ -42,7 +33,12 @@ export function EnrollPathButton({
   }
 
   return (
-    <Button size="sm" onClick={enroll} disabled={isPending} className="w-full">
+    <Button
+      size="sm"
+      onClick={() => enroll(undefined)}
+      disabled={isPending}
+      className="w-full"
+    >
       {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
       Enroll in path
     </Button>

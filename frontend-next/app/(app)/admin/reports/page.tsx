@@ -2,6 +2,7 @@ import { requireAdmin, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { asArray, fmt } from '@/lib/utils';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -26,10 +27,6 @@ type SubResult = {
   score?: number | null; graded?: boolean | null; submitted_at?: string | null;
 };
 
-function fmt(dt?: string | null) {
-  if (!dt) return '—';
-  return new Date(dt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 export default async function AdminReportsPage() {
   await requireAdmin();
@@ -42,9 +39,9 @@ export default async function AdminReportsPage() {
     client.GET('/assignments/all-submissions' as never, {} as never),
   ]);
 
-  const reports = (Array.isArray(dropoffRes.data) ? dropoffRes.data : []) as LessonDropoff[];
-  const testResults = (Array.isArray(testResultsRes.data) ? testResultsRes.data : []) as TestResult[];
-  const submissions = (Array.isArray(subsRes.data) ? subsRes.data : []) as SubResult[];
+  const reports = asArray<LessonDropoff>(dropoffRes.data);
+  const testResults = asArray<TestResult>(testResultsRes.data);
+  const submissions = asArray<SubResult>(subsRes.data);
 
   const passedTests = testResults.filter((r) => r.passed).length;
   const gradedSubs = submissions.filter((s) => s.graded).length;

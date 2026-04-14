@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
+import { asArray } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -67,12 +68,12 @@ export async function AdminDashboard({ name, email, role }: { name: string; emai
     client.GET('/approvals/pending'    as never, {} as never),
   ]);
 
-  const users     = (Array.isArray(usersRes.data)     ? usersRes.data     : []) as UserItem[];
-  const sessions  = (Array.isArray(sessionsRes.data)  ? sessionsRes.data  : []) as SessionItem[];
-  const results   = (Array.isArray(resultsRes.data)   ? resultsRes.data   : []) as ResultItem[];
+  const users     = asArray<UserItem>(usersRes.data);
+  const sessions  = asArray<SessionItem>(sessionsRes.data);
+  const results   = asArray<ResultItem>(resultsRes.data);
   type CourseItem = { id: number; is_active?: boolean | null; category?: string | null; enrollment_count?: number | null };
-  const courses   = (Array.isArray(coursesRes.data)   ? coursesRes.data   : []) as CourseItem[];
-  const approvals = (Array.isArray(approvalsRes.data) ? approvalsRes.data : []) as ApprovalItem[];
+  const courses   = asArray<CourseItem>(coursesRes.data);
+  const approvals = asArray<ApprovalItem>(approvalsRes.data);
 
   const totalUsers      = users.length;
   const totalStudents   = users.filter(u => u.role === 'student').length;

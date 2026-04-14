@@ -1,5 +1,6 @@
 import { getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
+import { asArray } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -57,7 +58,7 @@ export async function AdminAttendanceGrid() {
     } as never),
   ]);
 
-  const students = (Array.isArray(allRes.data) ? allRes.data : []) as EngagementRow[];
+  const students = asArray<EngagementRow>(allRes.data);
 
   // daily response is { dates: string[], students: [...] }
   const dailyPayload = (dailyRes.data ?? {}) as DailyResponse;

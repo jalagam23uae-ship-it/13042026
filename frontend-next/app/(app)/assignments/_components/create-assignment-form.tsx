@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,14 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function CreateAssignmentForm({
   courses,
 }: {
   courses: Array<{ id: number; title: string }>;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [courseId, setCourseId] = useState<string>(
     courses[0] ? String(courses[0].id) : '',
   );
@@ -25,15 +23,9 @@ export function CreateAssignmentForm({
   const [dueDate, setDueDate] = useState('');
   const [maxScore, setMaxScore] = useState('100');
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!title.trim() || !courseId) {
-      toast.error('Title and course are required');
-      return;
-    }
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.POST('/assignments/', {
+  const { mutate: create, isPending } = useApiMutation(
+    () =>
+      browserClient().POST('/assignments/', {
         body: {
           course_id: Number(courseId),
           title: title.trim(),
@@ -41,18 +33,26 @@ export function CreateAssignmentForm({
           due_date: dueDate ? new Date(dueDate).toISOString() : null,
           max_score: Number(maxScore) || 100,
         } as never,
-      });
-      if (error) {
-        toast.error('Failed to create assignment.');
-        return;
-      }
-      toast.success(`Assignment "${title}" created`);
-      setTitle('');
-      setDescription('');
-      setDueDate('');
-      setMaxScore('100');
-      router.refresh();
-    });
+      }),
+    {
+      errorMessage: 'Failed to create assignment.',
+      onSuccess: () => {
+        toast.success(`Assignment "${title}" created`);
+        setTitle('');
+        setDescription('');
+        setDueDate('');
+        setMaxScore('100');
+      },
+    },
+  );
+
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!title.trim() || !courseId) {
+      toast.error('Title and course are required');
+      return;
+    }
+    create(undefined);
   }
 
   if (courses.length === 0) {

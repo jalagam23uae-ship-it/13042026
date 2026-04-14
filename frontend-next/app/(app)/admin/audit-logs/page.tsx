@@ -4,7 +4,7 @@ import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { asArray, cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -74,7 +74,7 @@ export default async function AdminAuditLogsPage({
   }
   const error = logsRes.error;
 
-  const actionTypes = (Array.isArray(actionsRes.data) ? actionsRes.data : []) as string[];
+  const actionTypes = asArray<string>(actionsRes.data);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const canPrev = page > 1;
   const canNext = page < totalPages;

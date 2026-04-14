@@ -16,7 +16,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, fmt } from '@/lib/utils';
 import { browserClient } from '@/lib/api/client';
 import { useRouter } from 'next/navigation';
 
@@ -33,11 +33,6 @@ type ResultRow = {
   percentage?: number | null; passed?: boolean | null;
   attempt_no?: number | null; taken_at?: string | null;
 };
-
-function fmt(dt?: string | null) {
-  if (!dt) return '—';
-  return new Date(dt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 export function ManageTestDialog({ test }: { test: TestRow }) {
   const router = useRouter();

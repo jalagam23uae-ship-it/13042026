@@ -55,6 +55,22 @@ export async function requireManager(): Promise<SessionUser> {
   return user;
 }
 
+/** True if the user's role is admin (case-insensitive). */
+export function isAdmin(user: SessionUser): boolean {
+  return user.role?.toLowerCase() === 'admin';
+}
+
+/** True if the user is an admin or instructor (case-insensitive). */
+export function isManager(user: SessionUser): boolean {
+  const role = user.role?.toLowerCase();
+  return role === 'admin' || role === 'instructor';
+}
+
+/** True if the user's role is student (case-insensitive). */
+export function isStudent(user: SessionUser): boolean {
+  return user.role?.toLowerCase() === 'student';
+}
+
 /**
  * Persist a session: writes the raw JWT into an httpOnly cookie.
  * Called from the login server action after a successful backend call.

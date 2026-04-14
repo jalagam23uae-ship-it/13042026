@@ -1,5 +1,6 @@
-import { requireUser, getSessionToken } from '@/lib/auth/session';
+import { requireUser, getSessionToken, isManager } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
+import { asArray } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -51,7 +52,7 @@ function fmt(dt?: string | null) {
 
 export default async function AttendancePage() {
   const user = await requireUser();
-  const isAdmin = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
+  const isAdmin = isManager(user);
   const token = await getSessionToken();
   const client = serverClient(token);
 
@@ -61,11 +62,11 @@ export default async function AttendancePage() {
     client.GET('/time-tracking/daily-attendance/me', {}),
     client.GET('/time-tracking/my-stats', {}),
   ]);
-  const rows = (Array.isArray(myResult.data) ? myResult.data : []) as AttendanceRow[];
+  const rows = asArray<AttendanceRow>(myResult.data);
   const summary = summaryResult.data as
     | { total_sessions?: number; attended?: number; rate?: number }
     | undefined;
-  const daily = (Array.isArray(dailyResult.data) ? dailyResult.data : []) as DailyAttendance[];
+  const daily = asArray<DailyAttendance>(dailyResult.data);
   const stats = (statsResult.data ?? {}) as MyStats;
 
   return (

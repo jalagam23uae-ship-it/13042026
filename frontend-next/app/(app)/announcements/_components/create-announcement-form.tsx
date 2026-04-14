@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,18 +8,39 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { browserClient } from '@/lib/api/client';
+import { useApiMutation } from '@/hooks/use-api-mutation';
 
 export function CreateAnnouncementForm({
   courses,
 }: {
   courses: Array<{ id: number; title: string }>;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [courseId, setCourseId] = useState<string>('');
   const [isPinned, setIsPinned] = useState(false);
+
+  const { mutate: post, isPending } = useApiMutation(
+    () =>
+      browserClient().POST('/announcements/', {
+        body: {
+          title: title.trim(),
+          content: content.trim(),
+          course_id: courseId ? Number(courseId) : null,
+          is_pinned: isPinned,
+        } as never,
+      }),
+    {
+      successMessage: 'Announcement posted',
+      errorMessage: 'Failed to create announcement.',
+      onSuccess: () => {
+        setTitle('');
+        setContent('');
+        setCourseId('');
+        setIsPinned(false);
+      },
+    },
+  );
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,27 +48,7 @@ export function CreateAnnouncementForm({
       toast.error('Title and content are required');
       return;
     }
-    startTransition(async () => {
-      const client = browserClient();
-      const { error } = await client.POST('/announcements/', {
-        body: {
-          title: title.trim(),
-          content: content.trim(),
-          course_id: courseId ? Number(courseId) : null,
-          is_pinned: isPinned,
-        } as never,
-      });
-      if (error) {
-        toast.error('Failed to create announcement.');
-        return;
-      }
-      toast.success('Announcement posted');
-      setTitle('');
-      setContent('');
-      setCourseId('');
-      setIsPinned(false);
-      router.refresh();
-    });
+    post(undefined);
   }
 
   return (

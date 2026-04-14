@@ -1,5 +1,6 @@
 import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
+import { asArray } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -40,7 +41,7 @@ export default async function TimeTrackingPage() {
   ]);
 
   const stats = (statsRes.data ?? null) as Stats | null;
-  const daily = (Array.isArray(dailyRes.data) ? dailyRes.data : []) as DayRow[];
+  const daily = asArray<DayRow>(dailyRes.data);
 
   return (
     <div className="flex flex-col gap-6">

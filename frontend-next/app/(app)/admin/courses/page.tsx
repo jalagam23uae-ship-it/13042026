@@ -1,4 +1,4 @@
-import { requireManager, getSessionToken } from '@/lib/auth/session';
+import { requireManager, getSessionToken, isAdmin as checkIsAdmin } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ type AdminCourse = {
 
 export default async function AdminCoursesPage() {
   const user = await requireManager();
-  const isAdmin = user.role?.toLowerCase() === 'admin';
+  const isAdmin = checkIsAdmin(user);
   const token = await getSessionToken();
   const client = serverClient(token);
 
