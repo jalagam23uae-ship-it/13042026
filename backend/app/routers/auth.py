@@ -1,16 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy.orm import Session
 from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.schemas.auth import LoginRequest, TokenResponse
-from app.schemas.user import UserCreate, UserOut
-from app.services.auth_service import (
-    authenticate_user, create_access_token, decode_token,
-    hash_password, verify_password,
-)
 from app.models.user import User
 from app.routers.deps import get_current_user
-import re
+from app.schemas.auth import (
+    ChangePasswordRequest,
+    LoginRequest,
+    ResetPasswordRequest,
+    TokenResponse,
+)
+from app.schemas.user import UserCreate, UserOut
+from app.services.auth_service import (
+    authenticate_user,
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -96,26 +104,21 @@ def refresh_token(current: User = Depends(get_current_user)):
 
 @router.post("/change-password")
 def change_password(
-    body: dict,
+    body: ChangePasswordRequest,
     db: Session = Depends(get_db),
     current: User = Depends(get_current_user),
 ):
-    old_pw = body.get("old_password", "")
-    new_pw = body.get("new_password", "")
-
-    if not verify_password(old_pw, current.password):
+    if not verify_password(body.old_password, current.password):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
-    if len(new_pw) < 6:
-        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
 
-    current.password = hash_password(new_pw)
+    current.password = hash_password(body.new_password)
     db.commit()
     return {"message": "Password changed successfully"}
 
 
 @router.post("/reset-password")
 def admin_reset_password(
-    body: dict,
+    body: ResetPasswordRequest,
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_user),
 ):
@@ -123,16 +126,10 @@ def admin_reset_password(
     if admin.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    user_id = body.get("user_id")
-    new_pw = body.get("new_password", "")
-
-    if not user_id or len(new_pw) < 6:
-        raise HTTPException(status_code=400, detail="user_id and new_password (6+ chars) required")
-
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == body.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user.password = hash_password(new_pw)
+    user.password = hash_password(body.new_password)
     db.commit()
     return {"message": f"Password reset for {user.name}"}

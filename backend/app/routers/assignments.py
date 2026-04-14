@@ -173,3 +173,31 @@ def grade_submission(submission_id: int, body: GradeSubmission,
         link="/assignments",
     )
     return SubmissionOut.model_validate(sub)
+
+
+@router.get("/all-submissions")
+def all_submissions_audit(db: Session = Depends(get_db),
+                          current: User = Depends(get_current_user)):
+    """Admin/Instructor: all submissions across all assignments."""
+    if current.role not in ("admin", "instructor"):
+        raise HTTPException(status_code=403, detail="Not allowed")
+    subs = db.query(Submission).order_by(Submission.submitted_at.desc()).all()
+    a_ids = {s.assignment_id for s in subs}
+    u_ids = {s.user_id for s in subs}
+    assignments = {a.id: a for a in db.query(Assignment).filter(Assignment.id.in_(a_ids)).all()} if a_ids else {}
+    users = {u.id: u for u in db.query(User).filter(User.id.in_(u_ids)).all()} if u_ids else {}
+    return [
+        {
+            "id": s.id,
+            "assignment_id": s.assignment_id,
+            "assignment_title": assignments[s.assignment_id].title if s.assignment_id in assignments else f"#{s.assignment_id}",
+            "max_score": assignments[s.assignment_id].max_score if s.assignment_id in assignments else None,
+            "user_id": s.user_id,
+            "student_name": users[s.user_id].name if s.user_id in users else f"User #{s.user_id}",
+            "student_email": users[s.user_id].email if s.user_id in users else None,
+            "score": s.score,
+            "graded": s.graded,
+            "submitted_at": s.submitted_at.isoformat() if s.submitted_at else None,
+        }
+        for s in subs
+    ]

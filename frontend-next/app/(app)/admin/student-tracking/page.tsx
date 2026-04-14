@@ -10,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Timer, ArrowRight } from 'lucide-react';
 
 type StudentStat = {
@@ -85,11 +86,12 @@ export default async function AdminStudentTrackingPage() {
                     <TableCell>{formatHours(stat.total_course_hours)}</TableCell>
                     <TableCell className="text-xs">{fmt(stat.last_login)}</TableCell>
                     <TableCell className="text-right">
-                      <Link href={`/admin/student-tracking/${stat.user_id}`}>
-                        <Button size="sm" variant="ghost">
-                          Details
-                          <ArrowRight className="size-3" />
-                        </Button>
+                      <Link
+                        href={`/admin/student-tracking/${stat.user_id}`}
+                        className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }), 'gap-1')}
+                      >
+                        Details
+                        <ArrowRight className="size-3" />
                       </Link>
                     </TableCell>
                   </TableRow>

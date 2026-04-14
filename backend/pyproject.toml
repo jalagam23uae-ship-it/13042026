@@ -1,0 +1,80 @@
+[project]
+name = "atp-backend"
+version = "0.1.0"
+description = "ATP — Automate Training Platform (FastAPI backend)"
+requires-python = ">=3.11"
+
+# ── Ruff — linter + formatter ─────────────────────────────────
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = [
+  ".venv",
+  "venv",
+  "__pycache__",
+  "alembic/versions",
+]
+
+[tool.ruff.lint]
+# E/W = pycodestyle, F = pyflakes, I = isort, B = bugbear, UP = pyupgrade,
+# SIM = simplify, C4 = comprehensions, RUF = ruff-specific
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "C4", "RUF"]
+ignore = [
+  "E501",  # line too long — formatter handles this
+  "B008",  # `Depends()` in default args is the FastAPI idiom
+  "B904",  # `raise ... from err` — not critical in route handlers
+  "UP007", # `X | None` vs `Optional[X]` — Pydantic-friendly explicit form
+  "UP045", # same reason as UP007 (PEP 604 in type annotations)
+  "UP006", # `List[X]` vs `list[X]` — keep explicit typing imports for Pydantic
+  "UP035", # `typing.List` deprecation — same rationale as UP006
+  "UP017", # `datetime.UTC` alias — `timezone.utc` is still idiomatic
+  "E712",  # `== True` in SQLAlchemy filters is intentional (SQL bool semantics)
+  "E711",  # `== None` in SQLAlchemy filters compiles to `IS NULL`
+  "E741",  # ambiguous var names (`l`, `i`) — pre-existing, out of scope
+  "E702",  # multi-statement lines with `;` — pre-existing style, out of scope
+  "SIM108", # ternary suggestion — often less readable in route handlers
+]
+
+[tool.ruff.lint.per-file-ignores]
+"alembic/versions/*" = ["E", "F", "W", "I", "B", "UP"]
+"app/routers/*" = ["B008"]  # FastAPI uses Depends() as default
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+# ── mypy — type checker (lenient baseline; tighten incrementally) ─
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+follow_imports = "silent"
+check_untyped_defs = false
+disallow_untyped_defs = false
+warn_return_any = false
+warn_unused_ignores = true
+show_error_codes = true
+exclude = [
+  "alembic/versions",
+  "__pycache__",
+  ".venv",
+  "venv",
+]
+
+# SQLAlchemy ORM classes confuse mypy without the plugin — disable checks there.
+[[tool.mypy.overrides]]
+module = [
+  "app.models.*",
+  "app.database",
+]
+ignore_errors = true
+
+# ── Pytest (scaffolding for future tests; harmless if no tests exist) ─
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra"

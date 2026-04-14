@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 
 class EnrollmentCreate(BaseModel):
@@ -14,5 +15,11 @@ class EnrollmentOut(BaseModel):
     enrolled_at: Optional[datetime] = None
     completed: bool = False
     course_title: Optional[str] = None
+    is_active: bool = True
 
     model_config = {"from_attributes": True}
+
+
+class BulkEnrollRequest(BaseModel):
+    course_id: int
+    user_ids: List[int]

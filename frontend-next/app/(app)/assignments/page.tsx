@@ -1,6 +1,6 @@
 import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -11,16 +11,20 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { FileText } from 'lucide-react';
-import { CreateAssignmentForm } from './create-assignment-form';
+import { CreateAssignmentDialog } from './create-assignment-dialog';
 import { SubmitAssignmentDialog } from './submit-assignment-dialog';
+import { ManageAssignmentDialog } from './manage-assignment-dialog';
+import { AssignmentRowActions } from '../admin/assignments/assignment-row-actions';
 
 type Assignment = {
   id: number;
   title: string;
   description?: string | null;
   course_id?: number | null;
+  course_title?: string | null;
   due_date?: string | null;
   max_score?: number | null;
+  is_active?: boolean | null;
 };
 
 type Submission = {
@@ -38,15 +42,16 @@ function fmt(dt?: string | null) {
 
 export default async function AssignmentsPage() {
   const user = await requireUser();
-  const canCreate = user.role === 'admin' || user.role === 'instructor';
+  const canCreate = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
+  const isStudent = user.role?.toLowerCase() === 'student';
   const token = await getSessionToken();
   const client = serverClient(token);
 
   const [allResult, mineResult, adminCoursesResult] = await Promise.all([
-    client.GET('/assignments/all', {}),
-    client.GET('/assignments/my-submissions', {}),
+    client.GET('/assignments/all' as never, {} as never),
+    client.GET('/assignments/my-submissions' as never, {} as never),
     canCreate
-      ? client.GET('/enrollments/admin/courses', {})
+      ? client.GET('/enrollments/admin/courses' as never, {} as never)
       : Promise.resolve({ data: [] as unknown }),
   ]);
   const assignments = (Array.isArray(allResult.data) ? allResult.data : []) as Assignment[];
@@ -59,24 +64,17 @@ export default async function AssignmentsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Assignments</h1>
-        <p className="text-sm text-muted-foreground">
-          Assignments across your enrolled courses.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Assignments</h1>
+          <p className="text-sm text-muted-foreground">
+            {canCreate
+              ? 'Manage assignments and grade student submissions.'
+              : 'Assignments across your enrolled courses.'}
+          </p>
+        </div>
+        {canCreate ? <CreateAssignmentDialog courses={adminCourses} /> : null}
       </div>
-
-      {canCreate ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">New assignment</CardTitle>
-            <CardDescription>Admin / instructor only.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CreateAssignmentForm courses={adminCourses} />
-          </CardContent>
-        </Card>
-      ) : null}
 
       <Card>
         <CardHeader>
@@ -93,11 +91,14 @@ export default async function AssignmentsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Title</TableHead>
+                  <TableHead>Course</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead>Max score</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>My score</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  {isStudent && <TableHead>Status</TableHead>}
+                  {isStudent && <TableHead>My score</TableHead>}
+                  <TableHead className="text-right">
+                    {canCreate ? 'Manage' : 'Action'}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -115,34 +116,64 @@ export default async function AssignmentsPage() {
                       <TableCell className="font-medium">
                         {a.title}
                         {overdue ? (
-                          <Badge variant="destructive" className="ml-2">
-                            Overdue
-                          </Badge>
+                          <Badge variant="destructive" className="ml-2">Overdue</Badge>
                         ) : null}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {a.course_title ?? '—'}
                       </TableCell>
                       <TableCell className="text-xs">{fmt(a.due_date)}</TableCell>
                       <TableCell>{a.max_score ?? '—'}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={sub?.graded ? 'default' : sub ? 'secondary' : 'outline'}
-                        >
-                          {status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {sub?.score != null
-                          ? `${sub.score}${a.max_score ? ` / ${a.max_score}` : ''}`
-                          : '—'}
-                      </TableCell>
+
+                      {/* Student-only columns */}
+                      {isStudent && (
+                        <TableCell>
+                          <Badge variant={sub?.graded ? 'default' : sub ? 'secondary' : 'outline'}>
+                            {status}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {isStudent && (
+                        <TableCell>
+                          {sub?.score != null
+                            ? `${sub.score}${a.max_score ? ` / ${a.max_score}` : ''}`
+                            : '—'}
+                        </TableCell>
+                      )}
+
+                      {/* Action column */}
                       <TableCell className="text-right">
-                        {!sub ? (
-                          <SubmitAssignmentDialog
-                            assignmentId={a.id}
-                            assignmentTitle={a.title}
-                          />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Submitted</span>
-                        )}
+                        <div className="flex items-center justify-end gap-1">
+                          {/* Admin/Instructor: Manage submissions + Edit/Delete */}
+                          {canCreate && (
+                            <>
+                              <ManageAssignmentDialog assignment={a} />
+                              <AssignmentRowActions
+                                assignment={{
+                                  id: a.id,
+                                  course_id: a.course_id ?? 0,
+                                  course_title: a.course_title ?? undefined,
+                                  title: a.title,
+                                  description: a.description ?? null,
+                                  due_date: a.due_date ?? null,
+                                  max_score: a.max_score ?? 100,
+                                  is_active: a.is_active ?? true,
+                                }}
+                                courses={adminCourses}
+                              />
+                            </>
+                          )}
+                          {/* Student: Submit button */}
+                          {isStudent && !sub && (
+                            <SubmitAssignmentDialog
+                              assignmentId={a.id}
+                              assignmentTitle={a.title}
+                            />
+                          )}
+                          {isStudent && sub && (
+                            <span className="text-xs text-muted-foreground">Submitted</span>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

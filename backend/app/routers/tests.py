@@ -1,15 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from typing import List
 import random
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.models.test import Test, Question, TestResult, UserAnswer
 from app.models.enrollment import Enrollment
-from app.schemas.test import TestOut, QuestionOut, TestSubmit, TestResultOut
-from app.routers.deps import get_current_user, require_admin
+from app.models.test import Question, Test, TestResult, UserAnswer
 from app.models.user import User
+from app.routers.deps import get_current_user, require_admin, require_admin_or_instructor
 from app.routers.notifications import send_notification
+from app.schemas.test import (
+    QuestionOut,
+    TestCreate,
+    TestOut,
+    TestResultOut,
+    TestSubmit,
+)
 
 
 def _assert_can_access_test(db: Session, user: User, test: Test) -> None:
@@ -129,29 +137,77 @@ def submit_test(body: TestSubmit, db: Session = Depends(get_db),
     return result
 
 
+@router.get("/{test_id}/results")
+def get_test_results(test_id: int, db: Session = Depends(get_db),
+                     current: User = Depends(get_current_user)):
+    """Admin/Instructor: all student submissions for a test, with student info."""
+    if current.role not in ("admin", "instructor"):
+        raise HTTPException(status_code=403, detail="Not allowed")
+    test = db.query(Test).filter(Test.id == test_id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+    rows = db.query(TestResult).filter(TestResult.test_id == test_id)\
+             .order_by(TestResult.taken_at.desc()).all()
+    user_ids = {r.user_id for r in rows}
+    users = {u.id: u for u in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    return [
+        {
+            "id": r.id,
+            "user_id": r.user_id,
+            "student_name": users[r.user_id].name if r.user_id in users else f"User #{r.user_id}",
+            "student_email": users[r.user_id].email if r.user_id in users else "",
+            "score": r.score,
+            "total_marks": r.total_marks,
+            "percentage": r.percentage,
+            "passed": r.passed,
+            "attempt_no": r.attempt_no,
+            "taken_at": r.taken_at.isoformat() if r.taken_at else None,
+        }
+        for r in rows
+    ]
+
+
+@router.delete("/{test_id}", status_code=204)
+def delete_test(test_id: int, db: Session = Depends(get_db),
+                _: User = Depends(require_admin_or_instructor)):
+    test = db.query(Test).filter(Test.id == test_id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+    db.query(UserAnswer).filter(
+        UserAnswer.result_id.in_(
+            db.query(TestResult.id).filter(TestResult.test_id == test_id)
+        )
+    ).delete(synchronize_session=False)
+    db.query(TestResult).filter(TestResult.test_id == test_id).delete(synchronize_session=False)
+    db.query(Question).filter(Question.test_id == test_id).delete(synchronize_session=False)
+    db.delete(test); db.commit()
+
+
 @router.post("/", status_code=201)
-def create_test(body: dict, db: Session = Depends(get_db), _=Depends(require_admin)):
+def create_test(body: TestCreate, db: Session = Depends(get_db), _=Depends(require_admin)):
     """Admin: create a new test with questions."""
     test = Test(
-        title=body.get("title", "Untitled Test"),
-        course_id=body.get("course_id"),
-        pass_mark=body.get("pass_mark", 60),
-        duration_min=body.get("duration_min", 30),
+        title=body.title,
+        course_id=body.course_id,
+        pass_mark=body.pass_mark,
+        duration_min=body.duration_min,
     )
-    db.add(test); db.flush()
+    db.add(test)
+    db.flush()
 
-    for q in body.get("questions", []):
+    for q in body.questions:
         db.add(Question(
             test_id=test.id,
-            body=q.get("body", ""),
-            option_a=q.get("option_a"),
-            option_b=q.get("option_b"),
-            option_c=q.get("option_c"),
-            option_d=q.get("option_d"),
-            correct_opt=q.get("correct_opt", "A"),
-            marks=q.get("marks", 1),
+            body=q.body,
+            option_a=q.option_a,
+            option_b=q.option_b,
+            option_c=q.option_c,
+            option_d=q.option_d,
+            correct_opt=q.correct_opt,
+            marks=q.marks,
         ))
 
-    db.commit(); db.refresh(test)
+    db.commit()
+    db.refresh(test)
     qcount = db.query(func.count(Question.id)).filter(Question.test_id == test.id).scalar()
     return {"id": test.id, "title": test.title, "question_count": qcount}

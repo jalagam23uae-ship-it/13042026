@@ -2,9 +2,13 @@ import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trophy } from 'lucide-react';
+import { Trophy, Users } from 'lucide-react';
+import { StudentProgressTable } from './student-progress-table';
 
 type Enrollment = {
+  user_id?: number | null;
+  user_name?: string | null;
+  user_email?: string | null;
   course_id?: number;
   course_title?: string | null;
   progress_pct?: number | null;
@@ -14,10 +18,93 @@ type Enrollment = {
 };
 
 export default async function ProgressPage() {
-  await requireUser();
+  const user = await requireUser();
   const token = await getSessionToken();
   const client = serverClient(token);
 
+  const isStaff =
+    user.role?.toLowerCase() === 'admin' ||
+    user.role?.toLowerCase() === 'instructor';
+
+  /* ── Admin / Instructor: all students ─────────────────────── */
+  if (isStaff) {
+    const { data } = await client.GET('/enrollments/all' as never, {} as never);
+    const rows = (Array.isArray(data) ? data : []) as Enrollment[];
+
+    // Group by user_id
+    const byUser = new Map<
+      number,
+      { name: string; email: string; courses: Enrollment[] }
+    >();
+    for (const row of rows) {
+      const uid = row.user_id ?? 0;
+      if (!byUser.has(uid)) {
+        byUser.set(uid, {
+          name: row.user_name ?? `User #${uid}`,
+          email: row.user_email ?? '',
+          courses: [],
+        });
+      }
+      byUser.get(uid)!.courses.push(row);
+    }
+
+    const students = Array.from(byUser.entries()).map(([uid, { name, email, courses }]) => {
+      const enrolled = courses.length;
+      const completed = courses.filter((c) => c.completed).length;
+      const avgPct =
+        enrolled > 0
+          ? Math.round(
+              courses.reduce((sum, c) => sum + Number(c.progress_pct ?? 0), 0) /
+                enrolled,
+            )
+          : 0;
+      return {
+        user_id: uid,
+        name,
+        email,
+        courses: courses.map((c) => ({
+          course_id: c.course_id ?? 0,
+          course_title: c.course_title,
+          progress_pct: c.progress_pct,
+          completed: c.completed,
+        })),
+        enrolled,
+        completed,
+        avgPct,
+      };
+    });
+
+    const totalStudents = students.length;
+    const totalEnrollments = rows.length;
+    const completedAll = rows.filter((r) => r.completed).length;
+
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Student Progress</h1>
+          <p className="text-sm text-muted-foreground">
+            Course completion overview for every enrolled student.
+          </p>
+        </div>
+
+        {/* Summary strip */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <SummaryCard label="Students tracked" value={String(totalStudents)} icon={Users} />
+          <SummaryCard label="Total enrollments" value={String(totalEnrollments)} icon={Trophy} />
+          <SummaryCard
+            label="Completions"
+            value={String(completedAll)}
+            icon={Trophy}
+            hint={totalEnrollments > 0 ? `${Math.round((completedAll / totalEnrollments) * 100)}% rate` : undefined}
+          />
+        </div>
+
+        <StudentProgressTable students={students} />
+      </div>
+    );
+  }
+
+  /* ── Student: own progress ─────────────────────────────────── */
   const { data, error } = await client.GET('/enrollments/my', {});
   const enrollments = (Array.isArray(data) ? data : []) as Enrollment[];
   const totalCourses = enrollments.length;
@@ -25,7 +112,8 @@ export default async function ProgressPage() {
   const avgProgress =
     totalCourses > 0
       ? Math.round(
-          enrollments.reduce((sum, e) => sum + Number(e.progress_pct ?? 0), 0) / totalCourses,
+          enrollments.reduce((sum, e) => sum + Number(e.progress_pct ?? 0), 0) /
+            totalCourses,
         )
       : 0;
 
@@ -100,6 +188,33 @@ function Summary({ label, value }: { label: string; value: string }) {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-semibold">{value}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  icon: Icon,
+  hint,
+}: {
+  label: string;
+  value: string;
+  icon: typeof Trophy;
+  hint?: string;
+}) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-4 pt-5">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+          <Icon className="size-5 text-primary" />
+        </div>
+        <div>
+          <div className="text-2xl font-bold">{value}</div>
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+        </div>
       </CardContent>
     </Card>
   );

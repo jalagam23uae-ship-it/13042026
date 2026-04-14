@@ -13,3 +13,4 @@ class Enrollment(Base):
     completed = Column(Boolean, server_default="false")
     completed_at = Column(DateTime(timezone=True))
     last_accessed_at = Column(DateTime(timezone=True))
+    is_active = Column(Boolean, server_default="true", nullable=False)

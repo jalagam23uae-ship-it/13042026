@@ -1,6 +1,6 @@
 import { requireAdmin, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { CreateUserForm } from './create-user-form';
+import { CreateUserDialog } from './create-user-dialog';
 import { UserRowActions } from './user-row-actions';
 import { BulkImportDialog } from './bulk-import-dialog';
 
@@ -37,20 +37,11 @@ export default async function AdminUsersPage() {
             Admin-only view. Manage and import users below.
           </p>
         </div>
-        <BulkImportDialog />
+        <div className="flex items-center gap-2">
+          <CreateUserDialog />
+          <BulkImportDialog />
+        </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Create new user</CardTitle>
-          <CardDescription>
-            Single user. For bulk creation, use the &ldquo;Bulk import&rdquo; button above.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CreateUserForm />
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>

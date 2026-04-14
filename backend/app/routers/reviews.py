@@ -32,6 +32,26 @@ def get_course_reviews(course_id: int, db: Session = Depends(get_db),
     }
 
 
+@router.get("/all")
+def get_all_reviews(db: Session = Depends(get_db), current: User = Depends(get_current_user)):
+    """Admin / Instructor: see all reviews across all courses."""
+    if current.role not in ("admin", "instructor"):
+        raise HTTPException(status_code=403, detail="Not allowed")
+    reviews = db.query(Review).order_by(Review.created_at.desc()).all()
+    user_ids = {r.user_id for r in reviews}
+    names = {u.id: u.name for u in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    course_ids = {r.course_id for r in reviews}
+    titles = {c.id: c.title for c in db.query(Course).filter(Course.id.in_(course_ids)).all()} if course_ids else {}
+    return [
+        {
+            **ReviewOut.model_validate(r).model_dump(),
+            "author_name": names.get(r.user_id, "Unknown"),
+            "course_title": titles.get(r.course_id, f"Course #{r.course_id}"),
+        }
+        for r in reviews
+    ]
+
+
 @router.post("/", status_code=201)
 def create_review(body: ReviewCreate, db: Session = Depends(get_db),
                   current: User = Depends(get_current_user)):

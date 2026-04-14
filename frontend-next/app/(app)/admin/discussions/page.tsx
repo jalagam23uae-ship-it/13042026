@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getSessionToken } from '@/lib/auth/session';
+import { requireAdmin, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessagesSquare } from 'lucide-react';
@@ -30,6 +30,7 @@ export default async function AdminDiscussionsPage({
 }: {
   searchParams: Promise<{ courseId?: string }>;
 }) {
+  await requireAdmin();
   const token = await getSessionToken();
   const client = serverClient(token);
   const params = await searchParams;

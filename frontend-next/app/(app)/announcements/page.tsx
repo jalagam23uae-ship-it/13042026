@@ -1,15 +1,15 @@
 import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SafeMarkdown } from '@/components/safe-markdown';
 import { Megaphone, Pin } from 'lucide-react';
-import { CreateAnnouncementForm } from './create-announcement-form';
+import { CreateAnnouncementDialog } from './create-announcement-dialog';
 import { AnnouncementActions } from './announcement-actions';
 import { Badge } from '@/components/ui/badge';
 
 export default async function AnnouncementsPage() {
   const user = await requireUser();
-  const canCreate = user.role === 'admin' || user.role === 'instructor';
+  const canCreate = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
   const token = await getSessionToken();
   const client = serverClient(token);
 
@@ -38,24 +38,15 @@ export default async function AnnouncementsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Announcements</h1>
-        <p className="text-sm text-muted-foreground">
-          Recent news and updates from your instructors and admins.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Announcements</h1>
+          <p className="text-sm text-muted-foreground">
+            Recent news and updates from your instructors and admins.
+          </p>
+        </div>
+        {canCreate ? <CreateAnnouncementDialog courses={adminCourses} /> : null}
       </div>
-
-      {canCreate ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Post new announcement</CardTitle>
-            <CardDescription>Admin / instructor only.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CreateAnnouncementForm courses={adminCourses} />
-          </CardContent>
-        </Card>
-      ) : null}
 
       {error ? (
         <Card>

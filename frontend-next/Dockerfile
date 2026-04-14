@@ -1,4 +1,4 @@
-ARG NODE_IMAGE=node:20-alpine
+ARG NODE_IMAGE=harbor.int.taqniat.ae/library/node@sha256:c5847f1185e06add3909f70790d0057aed3f51c4f64b637ff4b558447bd0dd27
 
 # ---- Builder ----
 FROM ${NODE_IMAGE} AS builder

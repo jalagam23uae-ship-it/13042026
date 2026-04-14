@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Route } from 'lucide-react';
 import { EnrollPathButton } from './enroll-path-button';
+import { CreatePathDialog } from './create-path-dialog';
+import { PathRowActions } from '../admin/learning-paths/path-row-actions';
 
 type LearningPath = {
   id: number;
@@ -16,20 +18,32 @@ type LearningPath = {
 };
 
 export default async function LearningPathsPage() {
-  await requireUser();
+  const user = await requireUser();
+  const isAdmin = user.role?.toLowerCase() === 'admin';
+  const canManage = isAdmin || user.role?.toLowerCase() === 'instructor';
   const token = await getSessionToken();
   const client = serverClient(token);
 
-  const { data, error } = await client.GET('/learning-paths/', {});
-  const paths = (Array.isArray(data) ? data : []) as LearningPath[];
+  const [pathsResult, coursesResult] = await Promise.all([
+    client.GET('/learning-paths/', {}),
+    canManage ? client.GET('/enrollments/admin/courses', {}) : Promise.resolve({ data: [] }),
+  ]);
+  const paths = (Array.isArray(pathsResult.data) ? pathsResult.data : []) as LearningPath[];
+  const adminCourses = (Array.isArray(coursesResult.data) ? coursesResult.data : []) as Array<{
+    id: number; title: string; category?: string | null;
+  }>;
+  const error = pathsResult.error;
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Learning Paths</h1>
-        <p className="text-sm text-muted-foreground">
-          Curated sequences of courses to build a skill end-to-end.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Learning Paths</h1>
+          <p className="text-sm text-muted-foreground">
+            Curated sequences of courses to build a skill end-to-end.
+          </p>
+        </div>
+        {canManage ? <CreatePathDialog courses={adminCourses} /> : null}
       </div>
 
       {error ? (
@@ -51,11 +65,14 @@ export default async function LearningPathsPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <Route className="size-5 text-primary" />
-                  {path.difficulty ? (
-                    <Badge variant="outline" className="capitalize">
-                      {path.difficulty}
-                    </Badge>
-                  ) : null}
+                  <div className="flex items-center gap-1">
+                    {path.difficulty ? (
+                      <Badge variant="outline" className="capitalize">
+                        {path.difficulty}
+                      </Badge>
+                    ) : null}
+                    {canManage && <PathRowActions id={path.id} />}
+                  </div>
                 </div>
                 <CardTitle className="mt-2 text-base">{path.title}</CardTitle>
                 {path.description ? (

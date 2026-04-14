@@ -1,4 +1,5 @@
 import { LogOut, Menu } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,8 +8,11 @@ import type { SessionUser } from '@/lib/auth/session';
 import { NotificationsBell } from './notifications-bell';
 import { ThemeToggle } from './theme-toggle';
 import { MobileSidebarTrigger } from './mobile-sidebar';
+import { LanguageSwitcher } from './language-switcher';
 
-export function Topbar({ user }: { user: SessionUser }) {
+export async function Topbar({ user }: { user: SessionUser }) {
+  const t = await getTranslations('topbar');
+
   const initials = (user.name ?? user.email ?? '?')
     .split(/\s+/)
     .map((s) => s[0])
@@ -23,15 +27,16 @@ export function Topbar({ user }: { user: SessionUser }) {
     <header className="flex h-12 items-center justify-between border-b bg-background px-4">
       <div className="flex items-center gap-2">
         <MobileSidebarTrigger>
-          <Button variant="ghost" size="sm" className="md:hidden" aria-label="Open menu">
+          <Button variant="ghost" size="sm" className="md:hidden" aria-label={t('openMenu')}>
             <Menu className="size-4" />
           </Button>
         </MobileSidebarTrigger>
         <div className="text-[13px] font-medium text-muted-foreground">
-          Automate Training Platform
+          {t('title')}
         </div>
       </div>
       <div className="flex items-center gap-2.5">
+        <LanguageSwitcher />
         <ThemeToggle />
         <NotificationsBell />
         <Badge variant="secondary" className="capitalize text-[10px]">
@@ -50,7 +55,7 @@ export function Topbar({ user }: { user: SessionUser }) {
         <form action={logoutAction}>
           <Button type="submit" variant="ghost" size="sm">
             <LogOut className="size-3.5" />
-            <span className="sr-only sm:not-sr-only">Log out</span>
+            <span className="sr-only sm:not-sr-only">{t('logOut')}</span>
           </Button>
         </form>
       </div>

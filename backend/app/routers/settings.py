@@ -1,10 +1,11 @@
 """System settings — admin-configurable LLM and feature flags."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.models.system_settings import SystemSetting
-from app.models.user import User
 from app.routers.deps import get_current_user, require_admin
+from app.schemas.settings import SettingsUpdate
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
@@ -36,16 +37,17 @@ def set_setting(db: Session, key: str, value: str):
 @router.get("/")
 def get_all_settings(db: Session = Depends(get_db), _=Depends(require_admin)):
     """Admin: get all system settings."""
-    result = {}
-    for key, default in DEFAULTS.items():
-        result[key] = get_setting(db, key)
-    return result
+    return {key: get_setting(db, key) for key in DEFAULTS}
 
 
 @router.put("/")
-def update_settings(body: dict, db: Session = Depends(get_db), _=Depends(require_admin)):
+def update_settings(
+    body: SettingsUpdate,
+    db: Session = Depends(get_db),
+    _=Depends(require_admin),
+):
     """Admin: update system settings."""
-    for key, value in body.items():
+    for key, value in body.model_dump(exclude_none=True).items():
         if key in DEFAULTS:
             set_setting(db, key, str(value))
     return {"message": "Settings updated", "settings": {k: get_setting(db, k) for k in DEFAULTS}}

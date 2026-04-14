@@ -19,8 +19,8 @@ type AttendanceRow = {
   session_id?: number | null;
   session_title?: string | null;
   status?: string | null;
-  checkin_time?: string | null;
-  checkout_time?: string | null;
+  check_in?: string | null;
+  check_out?: string | null;
 };
 
 type DailyAttendance = {
@@ -51,7 +51,7 @@ function fmt(dt?: string | null) {
 
 export default async function AttendancePage() {
   const user = await requireUser();
-  const isAdmin = user.role === 'admin';
+  const isAdmin = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
   const token = await getSessionToken();
   const client = serverClient(token);
 
@@ -141,8 +141,8 @@ export default async function AttendancePage() {
                     <TableCell className="font-medium">
                       {row.session_title ?? `Session ${row.session_id ?? ''}`}
                     </TableCell>
-                    <TableCell className="text-xs">{fmt(row.checkin_time)}</TableCell>
-                    <TableCell className="text-xs">{fmt(row.checkout_time)}</TableCell>
+                    <TableCell className="text-xs">{fmt(row.check_in)}</TableCell>
+                    <TableCell className="text-xs">{fmt(row.check_out)}</TableCell>
                     <TableCell>
                       {row.status ? (
                         <Badge

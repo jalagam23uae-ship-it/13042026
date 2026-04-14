@@ -278,16 +278,43 @@ export function CoursePlayer({ courseId, courseTitle, sections, lessons: initial
       </div>
 
       {/* Sidebar: sections + lessons */}
-      <Card className="h-fit max-h-[calc(100vh-8rem)] overflow-y-auto">
-        <CardContent className="p-2 text-sm">
-          <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {courseTitle}
-          </div>
+      <Card className="h-fit max-h-[calc(100vh-8rem)] overflow-y-auto flex flex-col">
+        {/* Sticky header with progress */}
+        <div className="sticky top-0 z-10 border-b bg-card px-4 py-3 shrink-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Course Content
+          </p>
+          <p className="mt-0.5 text-sm font-semibold leading-snug line-clamp-2">{courseTitle}</p>
+          {(() => {
+            const completedCount = lessons.filter((l) => l.completed).length;
+            const progressPct = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
+            return (
+              <div className="mt-2.5">
+                <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                  <span>{completedCount} / {lessons.length} lessons</span>
+                  <span className="font-medium">{progressPct}%</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-500"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
+        <CardContent className="p-2 pt-3 text-sm">
           {sections.length > 0 ? (
             sections.map((section) => (
-              <div key={section.id} className="mb-3">
-                <div className="px-2 py-1 text-[11px] font-semibold text-muted-foreground uppercase">
-                  {section.title}
+              <div key={section.id} className="mb-4">
+                <div className="flex items-center gap-2 px-2 mb-1.5">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                    {section.title}
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
                 </div>
                 {(groupedLessons.get(section.id) ?? []).map((l) => (
                   <LessonRow
@@ -303,8 +330,12 @@ export function CoursePlayer({ courseId, courseTitle, sections, lessons: initial
           {(groupedLessons.get('uncategorized') ?? []).length > 0 ? (
             <div className="mb-3">
               {sections.length > 0 ? (
-                <div className="px-2 py-1 text-[11px] font-semibold text-muted-foreground uppercase">
-                  Other
+                <div className="flex items-center gap-2 px-2 mb-1.5">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Other
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
                 </div>
               ) : null}
               {(groupedLessons.get('uncategorized') ?? []).map((l) => (
@@ -337,18 +368,45 @@ function LessonRow({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors',
-        active ? 'bg-primary/10 text-foreground' : 'hover:bg-accent',
+        'group relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs transition-all',
+        active
+          ? 'bg-primary/10 font-medium text-primary'
+          : lesson.completed
+            ? 'text-muted-foreground hover:bg-accent hover:text-foreground'
+            : 'hover:bg-accent',
       )}
     >
-      {lesson.completed ? (
-        <CheckCircle2 className="size-3.5 shrink-0 text-primary" />
-      ) : (
-        <Circle className="size-3.5 shrink-0 text-muted-foreground" />
+      {/* Active indicator bar */}
+      {active && (
+        <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-primary" />
       )}
-      <span className="flex-1 truncate">{lesson.title}</span>
+
+      {/* Status icon */}
+      {lesson.completed ? (
+        <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+          <CheckCircle2 className="size-3 text-emerald-600" />
+        </div>
+      ) : active ? (
+        <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/20">
+          <PlayCircle className="size-3 text-primary" />
+        </div>
+      ) : (
+        <div className="flex size-5 shrink-0 items-center justify-center rounded-full border border-border group-hover:border-primary/40">
+          <Circle className="size-2.5 text-muted-foreground" />
+        </div>
+      )}
+
+      <span className="flex-1 truncate leading-snug">{lesson.title}</span>
+
       {lesson.duration_min ? (
-        <span className="text-[10px] text-muted-foreground">{lesson.duration_min}m</span>
+        <span
+          className={cn(
+            'shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium',
+            active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground',
+          )}
+        >
+          {lesson.duration_min}m
+        </span>
       ) : null}
     </button>
   );

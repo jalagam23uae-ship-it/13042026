@@ -3,8 +3,9 @@ import { notFound, redirect } from 'next/navigation';
 import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import { QuestionEditor } from './question-editor';
 
@@ -32,7 +33,7 @@ export default async function EditTestPage({
   params: Promise<{ testId: string }>;
 }) {
   const user = await requireUser();
-  if (user.role !== 'admin' && user.role !== 'instructor') {
+  if (user.role?.toLowerCase() !== 'admin' && user.role?.toLowerCase() !== 'instructor') {
     redirect('/tests');
   }
   const { testId } = await params;
@@ -52,11 +53,9 @@ export default async function EditTestPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <Link href="/tests">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="size-3.5" />
-            Back
-          </Button>
+        <Link href="/tests" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5')}>
+          <ArrowLeft className="size-3.5" />
+          Back
         </Link>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{test.title}</h1>

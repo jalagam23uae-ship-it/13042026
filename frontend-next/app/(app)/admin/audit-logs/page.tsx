@@ -3,7 +3,8 @@ import { requireAdmin, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -160,11 +161,12 @@ export default async function AdminAuditLogsPage({
                 </span>
                 <div className="flex items-center gap-2">
                   {canPrev ? (
-                    <Link href={`/admin/audit-logs${queryString({ page: page - 1 })}`}>
-                      <Button size="sm" variant="outline">
-                        <ChevronLeft className="size-3.5" />
-                        Prev
-                      </Button>
+                    <Link
+                      href={`/admin/audit-logs${queryString({ page: page - 1 })}`}
+                      className={cn(buttonVariants({ size: 'sm', variant: 'outline' }), 'gap-1.5')}
+                    >
+                      <ChevronLeft className="size-3.5" />
+                      Prev
                     </Link>
                   ) : (
                     <Button size="sm" variant="outline" disabled>
@@ -173,11 +175,12 @@ export default async function AdminAuditLogsPage({
                     </Button>
                   )}
                   {canNext ? (
-                    <Link href={`/admin/audit-logs${queryString({ page: page + 1 })}`}>
-                      <Button size="sm" variant="outline">
-                        Next
-                        <ChevronRight className="size-3.5" />
-                      </Button>
+                    <Link
+                      href={`/admin/audit-logs${queryString({ page: page + 1 })}`}
+                      className={cn(buttonVariants({ size: 'sm', variant: 'outline' }), 'gap-1.5')}
+                    >
+                      Next
+                      <ChevronRight className="size-3.5" />
                     </Link>
                   ) : (
                     <Button size="sm" variant="outline" disabled>
@@ -193,4 +196,4 @@ export default async function AdminAuditLogsPage({
       </Card>
     </div>
   );
-}
+}

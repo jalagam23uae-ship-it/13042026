@@ -11,6 +11,7 @@ import {
   Send,
   XCircle,
   CheckCircle2,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -71,12 +72,20 @@ export function TestRunner({
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<TestResult | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
-  const [endTime] = useState(() =>
-    durationMin > 0 ? Date.now() + durationMin * 60_000 : null,
-  );
-  const [timeLeft, setTimeLeft] = useState<number | null>(
-    endTime ? endTime - Date.now() : null,
-  );
+  // endTime/timeLeft start null (identical on server & client → no hydration mismatch).
+  // They are set in useEffect, which only runs on the client after mount.
+  const [endTime, setEndTime] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  // Initialise the clock client-side only.
+  useEffect(() => {
+    if (durationMin > 0) {
+      const end = Date.now() + durationMin * 60_000;
+      setEndTime(end);
+      setTimeLeft(end - Date.now());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const submit = useCallback(async () => {
     setSubmitting(true);
@@ -119,15 +128,15 @@ export function TestRunner({
     setReviewOpen(true);
   }
 
-  // Timer tick + auto-submit at zero
+  // Timer tick + auto-submit at zero (runs only when endTime is set by the mount effect above)
   useEffect(() => {
-    if (!endTime) return;
+    if (endTime === null || result) return;
     const tick = setInterval(() => {
       const left = endTime - Date.now();
       if (left <= 0) {
         clearInterval(tick);
         setTimeLeft(0);
-        if (!result && !submitting) {
+        if (!submitting) {
           toast.message('Time is up — submitting your answers.');
           submit();
         }
@@ -153,44 +162,80 @@ export function TestRunner({
   // Result screen
   if (result) {
     const passed = result.passed;
+    const pct = Math.round(Number(result.percentage));
     return (
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            {passed ? (
-              <CheckCircle2 className="size-10 text-primary" />
-            ) : (
-              <XCircle className="size-10 text-destructive" />
-            )}
-            <div>
-              <CardTitle className="text-xl">
-                {passed ? 'Passed' : 'Failed'}
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">Attempt #{result.attempt_no}</p>
+      <div className="flex flex-col items-center gap-6 py-4">
+        {/* Result hero card */}
+        <Card className={cn('w-full max-w-lg overflow-hidden', passed ? 'border-emerald-200' : 'border-red-200')}>
+          {/* Coloured top strip */}
+          <div className={cn('px-6 py-8 text-center', passed ? 'bg-emerald-50' : 'bg-red-50')}>
+            <div className={cn(
+              'mx-auto mb-4 flex size-20 items-center justify-center rounded-full',
+              passed ? 'bg-emerald-100' : 'bg-red-100',
+            )}>
+              {passed ? (
+                <CheckCircle2 className="size-10 text-emerald-600" />
+              ) : (
+                <XCircle className="size-10 text-red-500" />
+              )}
             </div>
+            <h2 className={cn('text-3xl font-bold', passed ? 'text-emerald-700' : 'text-red-600')}>
+              {passed ? 'Congratulations!' : 'Not quite there'}
+            </h2>
+            <p className={cn('mt-1 text-sm', passed ? 'text-emerald-600' : 'text-red-500')}>
+              {passed ? 'You passed the test.' : 'You did not reach the pass mark.'}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Attempt #{result.attempt_no}</p>
           </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <Stat label="Score" value={`${result.score} / ${result.total_marks}`} />
-            <Stat label="Percentage" value={`${Math.round(Number(result.percentage))}%`} />
-            <Stat label="Pass mark" value={`${passMark}%`} />
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => router.push('/tests')}>Back to tests</Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setResult(null);
-                setAnswers(new Map());
-                setCurrent(0);
-              }}
-            >
-              Retry
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+
+          <CardContent className="px-6 py-5 flex flex-col gap-5">
+            {/* Score percentage bar */}
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-muted-foreground">Your score</span>
+                <span className="font-bold text-lg">{pct}%</span>
+              </div>
+              <div className="h-3 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={cn('h-full rounded-full transition-all duration-700', passed ? 'bg-emerald-500' : 'bg-red-400')}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                <span>0%</span>
+                <span className="text-amber-600 font-medium">Pass mark: {passMark}%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <Stat label="Score" value={`${result.score} / ${result.total_marks}`} highlight={passed} />
+              <Stat label="Percentage" value={`${pct}%`} highlight={passed} />
+              <Stat label="Pass mark" value={`${passMark}%`} />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-1">
+              <Button className="flex-1" onClick={() => router.push('/tests')}>
+                Back to tests
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 gap-1.5"
+                onClick={() => {
+                  setResult(null);
+                  setAnswers(new Map());
+                  setCurrent(0);
+                }}
+              >
+                <RefreshCw className="size-3.5" />
+                Retry test
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -393,11 +438,11 @@ export function TestRunner({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="rounded-md border p-3">
+    <div className={cn('rounded-lg border p-3', highlight ? 'border-emerald-200 bg-emerald-50/50' : '')}>
       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="text-lg font-semibold">{value}</div>
+      <div className={cn('text-lg font-bold', highlight ? 'text-emerald-700' : '')}>{value}</div>
     </div>
   );
 }

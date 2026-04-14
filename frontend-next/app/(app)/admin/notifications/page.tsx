@@ -1,4 +1,4 @@
-import { getSessionToken } from '@/lib/auth/session';
+import { requireAdmin, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Megaphone } from 'lucide-react';
@@ -7,6 +7,7 @@ import { BroadcastForm } from './broadcast-form';
 type UserRow = { id: number; name: string; email: string; role: string };
 
 export default async function AdminNotificationsPage() {
+  await requireAdmin();
   const token = await getSessionToken();
   const client = serverClient(token);
 

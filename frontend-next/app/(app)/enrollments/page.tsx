@@ -2,9 +2,11 @@ import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, GraduationCap } from 'lucide-react';
+import { BookOpen, GraduationCap, ShieldCheck } from 'lucide-react';
 import { EnrollmentBrowser } from './enrollment-browser';
 import { UnenrollButton } from './unenroll-button';
+import { AdminEnrollmentsTable } from './admin-enrollments-table';
+import { BulkEnrollDialog } from './bulk-enroll-dialog';
 
 type AvailableCourse = {
   id: number;
@@ -31,27 +33,100 @@ type MyEnrollment = {
   enrolled_at?: string | null;
 };
 
+type AdminEnrollment = {
+  id: number;
+  user_id: number;
+  user_name?: string | null;
+  user_email?: string | null;
+  course_id: number;
+  course_title?: string | null;
+  enrolled_at?: string | null;
+  completed?: boolean | null;
+  is_active?: boolean | null;
+};
+
 type WishlistItem = { course_id: number };
 
 export default async function EnrollmentsPage() {
-  await requireUser();
+  const user = await requireUser();
+  const isStaff =
+    user.role?.toLowerCase() === 'admin' ||
+    user.role?.toLowerCase() === 'instructor';
+  const isAdmin = user.role?.toLowerCase() === 'admin';
   const token = await getSessionToken();
   const client = serverClient(token);
 
+  /* ── Admin / Instructor: manage all enrollments ───────────── */
+  if (isStaff) {
+    const [allEnrollmentsResult, coursesResult] = await Promise.all([
+      isAdmin
+        ? client.GET('/enrollments/all' as never, {} as never)
+        : Promise.resolve({ data: [] }),
+      client.GET('/enrollments/courses' as never, {} as never),
+    ]);
+
+    const allEnrollments = (
+      Array.isArray(allEnrollmentsResult.data) ? allEnrollmentsResult.data : []
+    ) as AdminEnrollment[];
+    const courses = (
+      Array.isArray(coursesResult.data) ? coursesResult.data : []
+    ) as AvailableCourse[];
+
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Enrollments</h1>
+          <p className="text-sm text-muted-foreground">
+            View and manage student course enrollments.
+          </p>
+        </div>
+
+        {isAdmin ? (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10">
+                    <ShieldCheck className="size-4 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">Manage Enrollments</CardTitle>
+                    <CardDescription>
+                      Enable or disable individual student enrollments across all courses.
+                    </CardDescription>
+                  </div>
+                </div>
+                <BulkEnrollDialog courses={courses.map((c) => ({ id: c.id, title: c.title ?? '' }))} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <AdminEnrollmentsTable initialRows={allEnrollments} />
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center text-sm text-muted-foreground">
+              Enrollment management is available to administrators only.
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  /* ── Student: my enrollments + browse catalog ─────────────── */
   const [available, mine, wishlist, categoriesResult] = await Promise.all([
-    client.GET('/enrollments/courses', {}),
-    client.GET('/enrollments/my', {}),
-    client.GET('/wishlist/', {}),
-    client.GET('/enrollments/categories', {}),
+    client.GET('/enrollments/courses' as never, {} as never),
+    client.GET('/enrollments/my' as never, {} as never),
+    client.GET('/wishlist/' as never, {} as never),
+    client.GET('/enrollments/categories' as never, {} as never),
   ]);
 
   const courses = (Array.isArray(available.data) ? available.data : []) as AvailableCourse[];
   const myEnrollments = (Array.isArray(mine.data) ? mine.data : []) as MyEnrollment[];
   const wishlistItems = (Array.isArray(wishlist.data) ? wishlist.data : []) as WishlistItem[];
   const wishlistIds = new Set(wishlistItems.map((w) => w.course_id));
-  const categories = (
-    Array.isArray(categoriesResult.data) ? categoriesResult.data : []
-  ) as string[];
+  const categories = (Array.isArray(categoriesResult.data) ? categoriesResult.data : []) as string[];
 
   const enrolledCount = myEnrollments.length;
   const completedCount = myEnrollments.filter((e) => e.completed).length;
@@ -72,6 +147,7 @@ export default async function EnrollmentsPage() {
         <Metric icon={BookOpen} label="Available to enroll" value={availableCount} />
       </div>
 
+      {/* My enrollments */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">My enrollments</CardTitle>
@@ -128,6 +204,7 @@ export default async function EnrollmentsPage() {
         </CardContent>
       </Card>
 
+      {/* Browse catalog */}
       <EnrollmentBrowser
         courses={courses}
         categories={categories}

@@ -4,7 +4,8 @@ import { requireAdmin, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -94,11 +95,12 @@ export default async function StudentDetailPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <Link href="/admin/student-tracking">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="size-3.5" />
-            Back
-          </Button>
+        <Link
+          href="/admin/student-tracking"
+          className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5')}
+        >
+          <ArrowLeft className="size-3.5" />
+          Back
         </Link>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{user.name ?? `User ${user.id}`}</h1>

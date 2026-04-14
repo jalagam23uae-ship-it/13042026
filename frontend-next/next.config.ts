@@ -1,13 +1,10 @@
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 const nextConfig: NextConfig = {
-  // Emit a minimal standalone server in .next/standalone for Docker.
   output: 'standalone',
-  // The standalone output does not copy non-bundled files by default.
-  // Keep this list minimal.
-  experimental: {
-    // Trim telemetry in prod builds.
-  },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

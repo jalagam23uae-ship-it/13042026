@@ -1,6 +1,6 @@
 import { requireUser, getSessionToken } from '@/lib/auth/session';
 import { serverClient } from '@/lib/api/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Calendar, Clock } from 'lucide-react';
-import { CreateSessionForm } from './create-session-form';
+import { CreateSessionDialog } from './create-session-dialog';
 import {
   AttendeesButton,
   CheckInButton,
@@ -46,7 +46,7 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'dest
 
 export default async function SessionsPage() {
   const user = await requireUser();
-  const canCreate = user.role === 'admin' || user.role === 'instructor';
+  const canCreate = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'instructor';
   const token = await getSessionToken();
   const client = serverClient(token);
 
@@ -64,24 +64,15 @@ export default async function SessionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Sessions</h1>
-        <p className="text-sm text-muted-foreground">
-          Live training sessions scheduled for your courses.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Sessions</h1>
+          <p className="text-sm text-muted-foreground">
+            Live training sessions scheduled for your courses.
+          </p>
+        </div>
+        {canCreate ? <CreateSessionDialog courses={adminCourses} /> : null}
       </div>
-
-      {canCreate ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">New session</CardTitle>
-            <CardDescription>Admin / instructor only.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CreateSessionForm courses={adminCourses} />
-          </CardContent>
-        </Card>
-      ) : null}
 
       <Card>
         <CardHeader>

@@ -1,18 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from typing import List
 from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.models.lesson import Lesson, LessonProgress, Section
 from app.models.course import Course
 from app.models.enrollment import Enrollment
+from app.models.lesson import Lesson, LessonProgress, Section
 from app.models.user import User
+from app.routers.deps import get_current_user, require_admin_or_instructor
 from app.schemas.lesson import (
-    LessonOut, LessonCreate, LessonUpdate,
-    LessonProgressOut, ProgressUpdate,
+    LessonCreate,
+    LessonOut,
+    LessonProgressOut,
+    LessonUpdate,
+    ProgressUpdate,
+    SectionCreate,
+    SectionUpdate,
 )
-from app.routers.deps import get_current_user, require_admin, require_admin_or_instructor
 
 router = APIRouter(prefix="/lessons", tags=["Lessons"])
 
@@ -183,8 +189,8 @@ def _check_course_completion(db: Session, user_id: int, course_id: int):
             enrollment.completed_at = datetime.now(timezone.utc)
             db.commit()
             # Send notification
-            from app.routers.notifications import send_notification
             from app.models.course import Course
+            from app.routers.notifications import send_notification
             course = db.query(Course).filter(Course.id == course_id).first()
             send_notification(
                 db, user_id,
@@ -232,31 +238,46 @@ def delete_lesson(lesson_id: int, db: Session = Depends(get_db),
 # ── Section CRUD ──────────────────────────────────────────────────
 
 @router.post("/sections", status_code=201)
-def create_section(body: dict, db: Session = Depends(get_db),
-                   _=Depends(require_admin_or_instructor)):
-    course = db.query(Course).filter(Course.id == body.get("course_id")).first()
+def create_section(
+    body: SectionCreate,
+    db: Session = Depends(get_db),
+    _=Depends(require_admin_or_instructor),
+):
+    course = db.query(Course).filter(Course.id == body.course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     section = Section(
-        course_id=body["course_id"],
-        title=body.get("title", "Untitled Section"),
-        sort_order=body.get("sort_order", 0),
+        course_id=body.course_id,
+        title=body.title,
+        sort_order=body.sort_order,
     )
-    db.add(section); db.commit(); db.refresh(section)
-    return {"id": section.id, "title": section.title, "sort_order": section.sort_order, "course_id": section.course_id}
+    db.add(section)
+    db.commit()
+    db.refresh(section)
+    return {
+        "id": section.id,
+        "title": section.title,
+        "sort_order": section.sort_order,
+        "course_id": section.course_id,
+    }
 
 
 @router.put("/sections/{section_id}")
-def update_section(section_id: int, body: dict, db: Session = Depends(get_db),
-                   _=Depends(require_admin_or_instructor)):
+def update_section(
+    section_id: int,
+    body: SectionUpdate,
+    db: Session = Depends(get_db),
+    _=Depends(require_admin_or_instructor),
+):
     section = db.query(Section).filter(Section.id == section_id).first()
     if not section:
         raise HTTPException(status_code=404, detail="Section not found")
-    if "title" in body:
-        section.title = body["title"]
-    if "sort_order" in body:
-        section.sort_order = body["sort_order"]
-    db.commit(); db.refresh(section)
+    if body.title is not None:
+        section.title = body.title
+    if body.sort_order is not None:
+        section.sort_order = body.sort_order
+    db.commit()
+    db.refresh(section)
     return {"id": section.id, "title": section.title, "sort_order": section.sort_order}
 
 

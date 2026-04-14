@@ -46,7 +46,9 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     method: request.method,
     headers,
     body,
-    redirect: 'manual',
+    // 'follow': Node.js resolves any FastAPI trailing-slash redirects internally.
+    // The browser never sees an internal `http://backend:8000/...` Location header.
+    redirect: 'follow',
   });
 
   const responseHeaders = new Headers();

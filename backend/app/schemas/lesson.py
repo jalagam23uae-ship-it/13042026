@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
 
 
 class LessonOut(BaseModel):
@@ -64,3 +65,14 @@ class ProgressUpdate(BaseModel):
     progress_pct: int = 0
     last_position: int = 0
     completed: bool = False
+
+
+class SectionCreate(BaseModel):
+    course_id: int
+    title: str = "Untitled Section"
+    sort_order: int = 0
+
+
+class SectionUpdate(BaseModel):
+    title: Optional[str] = None
+    sort_order: Optional[int] = None

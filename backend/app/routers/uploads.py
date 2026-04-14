@@ -8,7 +8,14 @@ router = APIRouter(prefix="/uploads", tags=["Uploads"])
 
 UPLOAD_DIR = "/app/uploads"
 ALLOWED_VIDEO = {".mp4", ".webm", ".ogg", ".mov", ".avi"}
-ALLOWED_FILES = ALLOWED_VIDEO | {".pdf", ".ppt", ".pptx", ".png", ".jpg", ".jpeg", ".gif"}
+ALLOWED_FILES = ALLOWED_VIDEO | {
+    ".pdf",
+    ".ppt", ".pptx",
+    ".doc", ".docx",
+    ".xls", ".xlsx",
+    ".png", ".jpg", ".jpeg", ".gif", ".webp",
+    ".zip", ".txt", ".csv",
+}
 MAX_SIZE = 500 * 1024 * 1024  # 500MB
 
 

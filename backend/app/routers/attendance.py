@@ -66,9 +66,28 @@ def check_out(payload: CheckOutRequest, db: DBSession = Depends(get_db),
     db.commit(); db.refresh(att)
     return att
 
-@router.get("/my", response_model=List[AttendanceOut])
+@router.get("/my")
 def my_attendance(db: DBSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Attendance).filter(Attendance.user_id == current_user.id).all()
+    rows = (
+        db.query(Attendance, SessionModel.title)
+        .outerjoin(SessionModel, Attendance.session_id == SessionModel.id)
+        .filter(Attendance.user_id == current_user.id)
+        .order_by(Attendance.check_in.desc())
+        .all()
+    )
+    return [
+        {
+            "id": att.id,
+            "user_id": att.user_id,
+            "session_id": att.session_id,
+            "session_title": title,
+            "check_in": att.check_in.isoformat() if att.check_in else None,
+            "check_out": att.check_out.isoformat() if att.check_out else None,
+            "hours_spent": float(att.hours_spent) if att.hours_spent is not None else None,
+            "status": att.status,
+        }
+        for att, title in rows
+    ]
 
 @router.get("/summary/me", response_model=AttendanceSummary)
 def my_summary(db: DBSession = Depends(get_db), current_user: User = Depends(get_current_user)):

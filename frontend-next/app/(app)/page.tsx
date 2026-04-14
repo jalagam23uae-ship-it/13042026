@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { AdminDashboard } from './admin-dashboard';
 import { InstructorDashboard } from './instructor-dashboard';
+import { MyCourseDialog } from './courses/my-courses-dialog';
 
 type Enrollment = {
   course_id?: number;
@@ -51,10 +52,10 @@ type EligibleCert = {
 export default async function DashboardPage() {
   const user = await requireUser();
 
-  if (user.role === 'admin') {
+  if (user.role?.toLowerCase() === 'admin') {
     return <AdminDashboard name={user.name} email={user.email} role={user.role} />;
   }
-  if (user.role === 'instructor') {
+  if (user.role?.toLowerCase() === 'instructor') {
     return (
       <InstructorDashboard
         id={user.id}
@@ -148,12 +149,7 @@ export default async function DashboardPage() {
                 <BookOpen className="size-4 text-muted-foreground" />
                 In progress
               </CardTitle>
-              <Link
-                href="/courses"
-                className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }))}
-              >
-                All courses <ArrowRight />
-              </Link>
+              <MyCourseDialog />
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
