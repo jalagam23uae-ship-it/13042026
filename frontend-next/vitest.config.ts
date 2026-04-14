@@ -10,6 +10,29 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     include: ['**/*.test.ts', '**/*.test.tsx'],
     exclude: ['node_modules', '.next', 'tests/e2e/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      include: [
+        'lib/**/*.{ts,tsx}',
+        'hooks/**/*.{ts,tsx}',
+        'components/common/**/*.{ts,tsx}',
+      ],
+      exclude: [
+        'lib/api/schema.ts',
+        '**/*.test.{ts,tsx}',
+        '**/*.d.ts',
+      ],
+      // Intentionally modest thresholds. The goal is "CI fails if
+      // someone deletes tests," not "reach 80%." Ratchet upward as new
+      // tests land.
+      thresholds: {
+        lines: 40,
+        functions: 40,
+        branches: 30,
+        statements: 40,
+      },
+    },
   },
   resolve: {
     alias: {
